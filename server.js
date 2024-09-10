@@ -27,8 +27,19 @@ pool.connect((err) => {
   }
 });
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
+// Search endpoint
+app.get('/api/resources', async (req, res) => {
+  const { query } = req.query;
+  try {
+    const results = await pool.query(
+      `SELECT * FROM resources WHERE name ILIKE $1 OR description ILIKE $1`,
+      [`%${query}%`]
+    );
+    res.json(results.rows);
+  } catch (err) {
+    console.error('Error fetching resources:', err);
+    res.status(500).send('Server error');
+  }
 });
 
 app.listen(port, () => {
