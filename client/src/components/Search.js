@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import './Search.css'; // Import CSS for styling
 
 function Search() {
   const [query, setQuery] = useState('');
@@ -17,20 +18,22 @@ function Search() {
   }
 
   return (
-    <div>
-      <h1>Search</h1>
+    <div className="search-container">
+      <h1>Search for Resources</h1>
       <input
         type="text"
+        className="search-input"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search resources"
+        placeholder="Enter search query"
       />
-      <button onClick={handleSearch}>Search</button>
-      <div>
+      <button className="search-button" onClick={handleSearch}>Search</button>
+      <div className="results-container">
         {resources.map(resource => (
-          <div key={resource.id}>
+          <div key={resource.id} className="resource-card">
             <h2>{resource.name}</h2>
             <p>{resource.description}</p>
+            <p>Location: {resource.location}</p>
           </div>
         ))}
       </div>
