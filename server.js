@@ -12,10 +12,10 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const pool = new Pool({
-  user: 'Noah',
+  user: 'postgres', // replace with your database user
   host: 'localhost',
-  database: 'resourcefinder',
-  password: 'cxyzCepTshQDGkLZWYwsPExCjQ7nQuRx',
+  database: 'your_db_name', // replace with your database name
+  password: 'your_db_password', // replace with your database password
   port: 5432,
 });
 
