@@ -6,7 +6,11 @@ import Contribute from './components/Contribute';
 import Donate from './components/Donate';
 import Volunteer from './components/Volunteer';
 import Contact from './components/Contact';
+import Login from './components/Login';
+import Register from './components/Register';
 import Navbar from './components/Navbar';
+import Protected from './components/Protected';
+import AddResource from './components/AddResource'; // Import AddResource component
 
 function App() {
   return (
@@ -20,6 +24,10 @@ function App() {
           <Route path="/donate" element={<Donate />} />
           <Route path="/volunteer" element={<Volunteer />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/protected" element={<Protected />} />
+          <Route path="/add-resource" element={<AddResource />} /> {/* Add Resource route */}
         </Routes>
       </div>
     </Router>
