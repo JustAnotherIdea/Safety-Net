@@ -1,18 +1,16 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const { Pool } = require('pg');
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 3000;
+const SECRET_KEY = 'your_secret_key'; // Change this to a secure key
 
-// Middleware
 app.use(bodyParser.json());
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:3001'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+app.use(cors({ origin: 'http://localhost:3001' }));
 
 const pool = new Pool({
   user: 'admin',
@@ -34,19 +32,54 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
-// Search endpoint
-app.get('/api/resources', async (req, res) => {
-  const { query } = req.query;
-  console.log('Received query:', query);
+// User registration
+app.post('/api/register', async (req, res) => {
+  const { name, email, password } = req.body;
   try {
-    const results = await pool.query(
-      `SELECT * FROM resources WHERE name ILIKE $1 OR description ILIKE $1`,
-      [`%${query}%`]
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await pool.query(
+      'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *',
+      [name, email, hashedPassword]
     );
-    console.log('Results:', results.rows);
-    res.json(results.rows);
+    res.json(result.rows[0]);
   } catch (err) {
-    console.error('Error fetching resources:', err);
+    console.error('Error registering user:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// User login
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    if (result.rows.length === 0) {
+      return res.status(400).send('User not found');
+    }
+    const user = result.rows[0];
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).send('Invalid credentials');
+    }
+    const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '1h' });
+    res.json({ token });
+  } catch (err) {
+    console.error('Error logging in user:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Add resource endpoint
+app.post('/api/resources', async (req, res) => {
+  const { name, category, location, description } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO resources (name, category, location, description) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, category, location, description]
+    );
+    res.json(result.rows[0]); // Return the added resource
+  } catch (err) {
+    console.error('Error adding resource:', err);
     res.status(500).send('Server error');
   }
 });

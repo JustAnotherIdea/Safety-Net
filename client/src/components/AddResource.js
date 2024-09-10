@@ -19,10 +19,15 @@ function AddResource() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:3000/api/resources', formData);
-      console.log('Resource added');
-    } catch (err) {
-      console.error('Error adding resource:', err);
+      const token = localStorage.getItem('token');
+      await axios.post('http://localhost:3000/api/resources', formData, {
+        headers: {
+          'Authorization': token // Sending JWT in the request headers
+        }
+      });
+      console.log('Resource added successfully!');
+    } catch (error) {
+      console.error('Error adding resource:', error);
     }
   };
 
