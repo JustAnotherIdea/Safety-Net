@@ -7,7 +7,7 @@ function Search() {
 
   const handleSearch = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/resources`, {
+      const response = await axios.get(`http://localhost:3000/api/resources`, {
         params: { query }
       });
       setResources(response.data);
