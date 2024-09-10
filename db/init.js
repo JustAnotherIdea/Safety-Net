@@ -7,27 +7,25 @@ const path = require('path');
 const client = new Client({
   user: 'Noah',
   host: 'localhost',
-  password: 'cxyzCepTshQDGkLZWYwsPExCjQ7nQuRx',
+  password: 'password',
   port: 5432,
 });
 
-client.connect();
-client.query('CREATE DATABASE resourcefinder', (err, res) => {
-  if (err) {
-    if (err.code !== '42P04') {  // '42P04' is the error code for 'database already exists'
-      console.error('Error creating database', err.stack);
-    }
-  } else {
-    console.log('Database created successfully');
+client.connect().then(() => {
+  return client.query('CREATE DATABASE resourcefinder');
+}).catch((err) => {
+  if (err.code !== '42P04') {  // '42P04' is the error code for 'database already exists'
+    console.error('Error creating database', err.stack);
   }
+}).finally(() => {
   client.end();
-  
+
   // Connect to the new database and create the schema
   const pool = new Pool({
     user: 'Noah',
     host: 'localhost',
     database: 'resourcefinder',
-    password: 'cxyzCepTshQDGkLZWYwsPExCjQ7nQuRx',
+    password: 'password',
     port: 5432,
   });
 
