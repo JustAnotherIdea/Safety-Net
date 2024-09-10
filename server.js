@@ -12,7 +12,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const pool = new Pool({
-  user: 'Noah',
+  user: 'admin',
   host: 'localhost',
   database: 'resourcefinder',
   password: 'password',

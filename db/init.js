@@ -3,10 +3,11 @@ const { Pool, Client } = require('pg');
 const fs = require('fs');
 const path = require('path');
 
-// Create the database if it doesn't exist
+// Connect to the default database
 const client = new Client({
-  user: 'Noah',
+  user: 'admin',
   host: 'localhost',
+  database: 'postgres',
   password: 'password',
   port: 5432,
 });
@@ -20,9 +21,9 @@ client.connect().then(() => {
 }).finally(() => {
   client.end();
 
-  // Connect to the new database and create the schema
+  // Connect to the new database directly and create the schema
   const pool = new Pool({
-    user: 'Noah',
+    user: 'admin',
     host: 'localhost',
     database: 'resourcefinder',
     password: 'password',
@@ -32,7 +33,15 @@ client.connect().then(() => {
   const schemaPath = path.join(__dirname, 'schema.sql');
   const schema = fs.readFileSync(schemaPath, 'utf8');
 
-  pool.query(schema, (err, res) => {
+  const modifiedSchema = `
+  -- Drop existing tables if they exist
+  DROP TABLE IF EXISTS resources CASCADE;
+  DROP TABLE IF EXISTS users CASCADE;
+
+  ${schema}
+  `;
+
+  pool.query(modifiedSchema, (err, res) => {
     if (err) {
       console.error('Error executing schema', err.stack);
     } else {
