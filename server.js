@@ -100,18 +100,29 @@ app.post('/api/resources', async (req, res) => {
   }
 });
 
+// Get resource by ID
+app.get('/api/resources/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM resources WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).send('Resource not found');
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error fetching resource:', err);
+    res.status(500).send('Server error');
+  }
+});
+
 // Get resources for the logged-in user
 app.get('/api/user/resources', async (req, res) => {
   const token = req.headers['authorization'];
   if (!token) return res.status(401).send('Access denied');
-
   try {
     const verified = jwt.verify(token, SECRET_KEY);
     const userId = verified.id;
-    const results = await pool.query(
-      `SELECT * FROM resources WHERE user_id = $1`,
-      [userId]
-    );
+    const results = await pool.query('SELECT * FROM resources WHERE user_id = $1', [userId]);
     res.json(results.rows);
   } catch (err) {
     console.error('Error fetching user resources:', err);
