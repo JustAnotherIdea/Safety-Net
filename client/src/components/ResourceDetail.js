@@ -53,6 +53,21 @@ function ResourceDetail() {
     }
   };
 
+  const handleDelete = async () => {
+    const token = localStorage.getItem('token');
+    if (window.confirm('Are you sure you want to delete this resource?')) {
+      try {
+        await axios.delete(`http://localhost:3000/api/resources/${id}`, {
+          headers: { Authorization: token }
+        });
+        console.log('Resource deleted successfully!');
+        navigate('/my-resources'); // Redirect after deletion
+      } catch (error) {
+        console.error('Error deleting resource:', error);
+      }
+    }
+  };
+
   const handleEditClick = () => {
     setIsEditing(true);
   };
@@ -67,7 +82,10 @@ function ResourceDetail() {
           <p>Description: {resource.description}</p>
 
           {localStorage.getItem('token') && // Only show if logged in
-            <button onClick={handleEditClick}>Edit</button>
+            <>
+              <button onClick={handleEditClick}>Edit</button>
+              <button onClick={handleDelete}>Delete</button> {/* Delete button */}
+            </>
           }
 
           {isEditing && (

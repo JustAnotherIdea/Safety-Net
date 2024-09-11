@@ -107,18 +107,16 @@ app.post('/api/resources', async (req, res) => {
 
 // Update resource endpoint
 app.put('/api/resources/:id', async (req, res) => {
-  const { id } = req.params; // Get resource ID from parameters
+  const { id } = req.params;
   const { name, category, location, description } = req.body;
 
-  // Verify Authorization Token
   const token = req.headers['authorization'];
   if (!token) return res.status(401).send('Access denied');
 
   try {
     const verified = jwt.verify(token, SECRET_KEY);
-    const userId = verified.id; // Get user ID from the token
+    const userId = verified.id;
 
-    // Check that the resource belongs to the user
     const resourceCheck = await pool.query('SELECT * FROM resources WHERE id = $1 AND user_id = $2', [id, userId]);
     if (resourceCheck.rows.length === 0) {
       return res.status(403).send('You are not authorized to update this resource'); // Forbidden
@@ -129,9 +127,9 @@ app.put('/api/resources/:id', async (req, res) => {
       [name, category, location, description, id]
     );
     if (result.rows.length === 0) {
-      return res.status(404).send('Resource not found'); // If no resource is found
+      return res.status(404).send('Resource not found');
     }
-    res.json(result.rows[0]); // Return the updated resource
+    res.json(result.rows[0]);
   } catch (err) {
     console.error('Error updating resource:', err);
     res.status(500).send('Server error');
@@ -183,6 +181,30 @@ app.get('/api/user/resources', async (req, res) => {
   } catch (err) {
     console.error('Error fetching user resources:', err);
     res.status(400).send('Invalid token');
+  }
+});
+
+// Delete resource endpoint
+app.delete('/api/resources/:id', async (req, res) => {
+  const { id } = req.params;
+
+  // Verify Authorization Token
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+    const resourceCheck = await pool.query('SELECT * FROM resources WHERE id = $1 AND user_id = $2', [id, userId]);
+    if (resourceCheck.rows.length === 0) {
+      return res.status(403).send('You are not authorized to delete this resource'); // Forbidden
+    }
+
+    await pool.query('DELETE FROM resources WHERE id = $1', [id]);
+    res.sendStatus(204);
+  } catch (err) {
+    console.error('Error deleting resource:', err);
+    res.status(500).send('Server error');
   }
 });
 
