@@ -136,26 +136,44 @@ app.put('/api/resources/:id', async (req, res) => {
   }
 });
 
-// Search endpoint with category filtering
+// Search endpoint with category filtering and pagination for infinite scrolling
 app.get('/api/resources', async (req, res) => {
-  const { query, category } = req.query;
+  const { query, category, page = 1, limit = 10 } = req.query; // Default values for page and limit
+  const queryParams = [];
+  
+  // Start building the SQL query
   let sqlQuery = `SELECT * FROM resources WHERE (name ILIKE $1 OR description ILIKE $1)`;
-  const queryParams = [`%${query}%`]; // Start with the query parameter
+  queryParams.push(`%${query}%`);
 
-  if (category && category !== "") {
-    // If a category is provided, add to filtering
+  // If category is provided, add it as a filter
+  if (category && category !== '') {
     sqlQuery += ` AND category = $2`;
     queryParams.push(category);
+    // Calculate the offset for pagination
+    const offset = (page - 1) * limit;
+    
+    // Append pagination to the SQL query
+    sqlQuery += ` LIMIT $3 OFFSET $4`;
+    queryParams.push(limit, offset);
+  } else {
+    // Calculate the offset for pagination
+    const offset = (page - 1) * limit;
+    
+    // Append pagination to the SQL query
+    sqlQuery += ` LIMIT $2 OFFSET $3`;
+    queryParams.push(limit, offset);
   }
+
 
   try {
     const results = await pool.query(sqlQuery, queryParams);
-    res.json(results.rows);
+    res.json(results.rows); // Return the results as JSON
   } catch (err) {
     console.error('Error fetching resources:', err);
     res.status(500).send('Server error');
   }
 });
+
 
 // Get resource by ID
 app.get('/api/resources/:id', async (req, res) => {
