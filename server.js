@@ -136,16 +136,20 @@ app.put('/api/resources/:id', async (req, res) => {
   }
 });
 
-// Search endpoint
+// Search endpoint with category filtering
 app.get('/api/resources', async (req, res) => {
-  const { query } = req.query;
-  console.log('Received query:', query);
+  const { query, category } = req.query;
+  let sqlQuery = `SELECT * FROM resources WHERE (name ILIKE $1 OR description ILIKE $1)`;
+  const queryParams = [`%${query}%`]; // Start with the query parameter
+
+  if (category && category !== "") {
+    // If a category is provided, add to filtering
+    sqlQuery += ` AND category = $2`;
+    queryParams.push(category);
+  }
+
   try {
-    const results = await pool.query(
-      `SELECT * FROM resources WHERE name ILIKE $1 OR description ILIKE $1`,
-      [`%${query}%`]
-    );
-    console.log('Results:', results.rows);
+    const results = await pool.query(sqlQuery, queryParams);
     res.json(results.rows);
   } catch (err) {
     console.error('Error fetching resources:', err);
