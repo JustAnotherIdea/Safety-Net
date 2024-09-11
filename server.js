@@ -88,6 +88,11 @@ app.post('/api/refresh-token', (req, res) => {
 // Add resource endpoint
 app.post('/api/resources', async (req, res) => {
   const { name, category, location, description, user_id } = req.body;
+  
+  // Verify Authorization Token
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).send('Access denied');
+  
   try {
     const result = await pool.query(
       'INSERT INTO resources (name, category, location, description, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',

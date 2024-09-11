@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
-import './Search.css'; // Import CSS for styling
+import './Search.css';
+import { Link } from 'react-router-dom';
 
 function Search() {
   const [query, setQuery] = useState('');
@@ -31,7 +32,7 @@ function Search() {
       <div className="results-container">
         {resources.map(resource => (
           <div key={resource.id} className="resource-card">
-            <h2>{resource.name}</h2>
+            <h2><Link to={`/resource/${resource.id}`}>{resource.name}</Link></h2>
             <p>{resource.description}</p>
             <p>Location: {resource.location}</p>
           </div>
