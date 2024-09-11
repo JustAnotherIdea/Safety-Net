@@ -105,7 +105,20 @@ app.put('/api/resources/:id', async (req, res) => {
   const { id } = req.params; // Get resource ID from parameters
   const { name, category, location, description } = req.body;
 
+  // Verify Authorization Token
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).send('Access denied');
+
   try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id; // Get user ID from the token
+
+    // Check that the resource belongs to the user
+    const resourceCheck = await pool.query('SELECT * FROM resources WHERE id = $1 AND user_id = $2', [id, userId]);
+    if (resourceCheck.rows.length === 0) {
+      return res.status(403).send('You are not authorized to update this resource'); // Forbidden
+    }
+
     const result = await pool.query(
       'UPDATE resources SET name = $1, category = $2, location = $3, description = $4 WHERE id = $5 RETURNING *',
       [name, category, location, description, id]
@@ -116,6 +129,23 @@ app.put('/api/resources/:id', async (req, res) => {
     res.json(result.rows[0]); // Return the updated resource
   } catch (err) {
     console.error('Error updating resource:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Search endpoint
+app.get('/api/resources', async (req, res) => {
+  const { query } = req.query;
+  console.log('Received query:', query);
+  try {
+    const results = await pool.query(
+      `SELECT * FROM resources WHERE name ILIKE $1 OR description ILIKE $1`,
+      [`%${query}%`]
+    );
+    console.log('Results:', results.rows);
+    res.json(results.rows);
+  } catch (err) {
+    console.error('Error fetching resources:', err);
     res.status(500).send('Server error');
   }
 });
