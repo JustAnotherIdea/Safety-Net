@@ -12,13 +12,16 @@ import Navbar from './components/Navbar';
 import Protected from './components/Protected';
 import AddResource from './components/AddResource';
 import MyResources from './components/MyResources';
-import ResourceDetail from './components/ResourceDetail'; // Import ResourceDetail component
+import ResourceDetail from './components/ResourceDetail'; // Import ResourceDetail
+import { ToastContainer } from 'react-toastify'; // Import ToastContainer
+import 'react-toastify/dist/ReactToastify.css'; // Import styles for notifications
 
 function App() {
   return (
     <Router>
       <div>
         <Navbar />
+        <ToastContainer /> {/* Add ToastContainer here */}
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/search" element={<Search />} />

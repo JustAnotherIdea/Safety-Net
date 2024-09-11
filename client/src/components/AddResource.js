@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 function AddResource() {
   const [formData, setFormData] = useState({
@@ -8,6 +9,8 @@ function AddResource() {
     location: '',
     description: '',
   });
+
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -20,18 +23,14 @@ function AddResource() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      const userId = JSON.parse(atob(token.split('.')[1])).id; // Extract user ID from the token (JWT)
-      await axios.post('http://localhost:3000/api/resources', {
-        ...formData,
-        user_id: userId, // Include user ID when submitting
-      }, {
-        headers: {
-          'Authorization': token
-        }
+      await axios.post('http://localhost:3000/api/resources', formData, {
+        headers: {'Authorization': token}
       });
-      console.log('Resource added successfully!');
+      alert('Resource added successfully!');  // User feedback
+      navigate('/my-resources'); // Redirect to My Resources
     } catch (error) {
       console.error('Error adding resource:', error);
+      alert('Failed to add resource, please try again.'); // User feedback on error
     }
   };
 
