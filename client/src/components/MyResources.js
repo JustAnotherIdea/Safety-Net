@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 function MyResources() {
   const [resources, setResources] = useState([]);
@@ -8,9 +9,7 @@ function MyResources() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get('http://localhost:3000/api/user/resources', {
-        headers: {
-          Authorization: token
-        }
+        headers: { Authorization: token }
       });
       setResources(response.data);
     } catch (error) {
@@ -30,7 +29,9 @@ function MyResources() {
       ) : (
         <ul>
           {resources.map(resource => (
-            <li key={resource.id}>{resource.name} - {resource.description}</li>
+            <li key={resource.id}>
+              <Link to={`/resource/${resource.id}`}>{resource.name}</Link> {/* Link to Resource Detail */}
+            </li>
           ))}
         </ul>
       )}
