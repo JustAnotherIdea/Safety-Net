@@ -6,8 +6,8 @@ function Navbar() {
   const isAuthenticated = localStorage.getItem('token') !== null;
 
   const handleLogout = () => {
-    localStorage.removeItem('token'); // Clear token from local storage
-    navigate('/'); // Redirect to home page
+    localStorage.removeItem('token');
+    navigate('/');
   };
 
   return (
@@ -21,6 +21,7 @@ function Navbar() {
         <li><Link to="/contact">Contact</Link></li>
         {isAuthenticated ? (
           <>
+            <li><Link to="/my-resources">My Resources</Link></li>
             <li><Link to="/add-resource">Add Resource</Link></li>
             <li><button onClick={handleLogout}>Logout</button></li>
           </>

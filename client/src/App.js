@@ -11,7 +11,7 @@ import Register from './components/Register';
 import Navbar from './components/Navbar';
 import Protected from './components/Protected';
 import AddResource from './components/AddResource';
-import MyResources from './components/MyResources'; // Import MyResources
+import MyResources from './components/MyResources'; // Import MyResources component
 
 function App() {
   return (
@@ -27,9 +27,9 @@ function App() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/protected" element={<Protected />} />
-          <Route path="/add-resource" element={<AddResource />} />
           <Route path="/my-resources" element={<MyResources />} /> {/* MyResources route */}
+          <Route path="/add-resource" element={<AddResource />} />
+          <Route path="/protected" element={<Protected />} />
         </Routes>
       </div>
     </Router>
