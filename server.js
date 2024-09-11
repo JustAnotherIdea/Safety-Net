@@ -71,16 +71,36 @@ app.post('/api/login', async (req, res) => {
 
 // Add resource endpoint
 app.post('/api/resources', async (req, res) => {
-  const { name, category, location, description } = req.body;
+  const { name, category, location, description, user_id } = req.body;
   try {
     const result = await pool.query(
-      'INSERT INTO resources (name, category, location, description) VALUES ($1, $2, $3, $4) RETURNING *',
-      [name, category, location, description]
+      'INSERT INTO resources (name, category, location, description, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [name, category, location, description, user_id]
     );
     res.json(result.rows[0]); // Return the added resource
   } catch (err) {
     console.error('Error adding resource:', err);
     res.status(500).send('Server error');
+  }
+});
+
+// Get resources for the logged-in user
+app.get('/api/user/resources', async (req, res) => {
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+
+    const results = await pool.query(
+      `SELECT * FROM resources WHERE user_id = $1`,
+      [userId]
+    );
+    res.json(results.rows);
+  } catch (err) {
+    console.error('Error fetching user resources:', err);
+    res.status(400).send('Invalid token');
   }
 });
 

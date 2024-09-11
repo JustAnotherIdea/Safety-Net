@@ -20,9 +20,13 @@ function AddResource() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:3000/api/resources', formData, {
+      const userId = JSON.parse(atob(token.split('.')[1])).id; // Extract user ID from the token (JWT)
+      await axios.post('http://localhost:3000/api/resources', {
+        ...formData,
+        user_id: userId, // Include user ID when submitting
+      }, {
         headers: {
-          'Authorization': token // Sending JWT in the request headers
+          'Authorization': token
         }
       });
       console.log('Resource added successfully!');

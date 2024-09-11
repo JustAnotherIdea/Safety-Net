@@ -1,7 +1,15 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function Navbar() {
+  const navigate = useNavigate();
+  const isAuthenticated = localStorage.getItem('token') !== null;
+
+  const handleLogout = () => {
+    localStorage.removeItem('token'); // Clear token from local storage
+    navigate('/'); // Redirect to home page
+  };
+
   return (
     <nav>
       <ul>
@@ -11,9 +19,17 @@ function Navbar() {
         <li><Link to="/donate">Donate</Link></li>
         <li><Link to="/volunteer">Volunteer</Link></li>
         <li><Link to="/contact">Contact</Link></li>
-        <li><Link to="/login">Login</Link></li>
-        <li><Link to="/register">Register</Link></li>
-        <li><Link to="/add-resource">Add Resource</Link></li>  {/* Add resource link */}
+        {isAuthenticated ? (
+          <>
+            <li><Link to="/add-resource">Add Resource</Link></li>
+            <li><button onClick={handleLogout}>Logout</button></li>
+          </>
+        ) : (
+          <>
+            <li><Link to="/login">Login</Link></li>
+            <li><Link to="/register">Register</Link></li>
+          </>
+        )}
       </ul>
     </nav>
   );

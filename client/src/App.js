@@ -10,7 +10,8 @@ import Login from './components/Login';
 import Register from './components/Register';
 import Navbar from './components/Navbar';
 import Protected from './components/Protected';
-import AddResource from './components/AddResource'; // Import AddResource component
+import AddResource from './components/AddResource';
+import MyResources from './components/MyResources'; // Import MyResources
 
 function App() {
   return (
@@ -27,7 +28,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/protected" element={<Protected />} />
-          <Route path="/add-resource" element={<AddResource />} /> {/* Add Resource route */}
+          <Route path="/add-resource" element={<AddResource />} />
+          <Route path="/my-resources" element={<MyResources />} /> {/* MyResources route */}
         </Routes>
       </div>
     </Router>
