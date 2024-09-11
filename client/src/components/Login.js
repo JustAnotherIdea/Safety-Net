@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
+
 function Login() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -28,6 +31,7 @@ function Login() {
       if (rememberMe) {
         // Logic for handling persistent session can be added here
       }
+      navigate('/');
     } catch (err) {
       console.error('Error logging in:', err);
     }

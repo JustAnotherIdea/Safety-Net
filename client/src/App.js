@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import useAuth from './hooks/useAuth';
 import Home from './components/Home';
 import Search from './components/Search';
 import Contribute from './components/Contribute';
