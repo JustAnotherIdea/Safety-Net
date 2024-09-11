@@ -3,14 +3,17 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const cookieParser = require('cookie-parser');
 const { Pool } = require('pg');
 
 const app = express();
 const port = process.env.PORT || 3000;
-const SECRET_KEY = 'your_secret_key'; // Change this to a secure key
+const SECRET_KEY = 'your_secret_key';
+const REFRESH_SECRET_KEY = 'your_refresh_secret_key'; // Use a separate secret for refresh tokens
 
 app.use(bodyParser.json());
-app.use(cors({ origin: 'http://localhost:3001' }));
+app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
+app.use(cookieParser());
 
 const pool = new Pool({
   user: 'admin',
@@ -34,12 +37,12 @@ app.get('/', (req, res) => {
 
 // User registration
 app.post('/api/register', async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, role = 'user' } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
-      'INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING *',
-      [name, email, hashedPassword]
+      'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *',
+      [name, email, hashedPassword, role]
     );
     res.json(result.rows[0]);
   } catch (err) {
@@ -61,12 +64,25 @@ app.post('/api/login', async (req, res) => {
     if (!isMatch) {
       return res.status(400).send('Invalid credentials');
     }
-    const token = jwt.sign({ id: user.id }, SECRET_KEY, { expiresIn: '1h' });
+    const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
+    const refreshToken = jwt.sign({ id: user.id }, REFRESH_SECRET_KEY, { expiresIn: '7d' });
+    res.cookie('refresh_token', refreshToken, { httpOnly: true });
     res.json({ token });
   } catch (err) {
     console.error('Error logging in user:', err);
     res.status(500).send('Server error');
   }
+});
+
+// Refresh Token endpoint
+app.post('/api/refresh-token', (req, res) => {
+  const token = req.cookies.refresh_token;
+  if (!token) return res.sendStatus(401); // No token found, unauthorized
+  jwt.verify(token, REFRESH_SECRET_KEY, (err, user) => {
+    if (err) return res.sendStatus(403); // Forbidden
+    const newAccessToken = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
+    res.json({ token: newAccessToken });
+  });
 });
 
 // Add resource endpoint
@@ -92,7 +108,6 @@ app.get('/api/user/resources', async (req, res) => {
   try {
     const verified = jwt.verify(token, SECRET_KEY);
     const userId = verified.id;
-
     const results = await pool.query(
       `SELECT * FROM resources WHERE user_id = $1`,
       [userId]
