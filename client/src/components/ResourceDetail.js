@@ -10,8 +10,13 @@ function ResourceDetail() {
   const [formData, setFormData] = useState({
     name: '',
     category: '',
+    url: '',
+    image_url: '',
     location: '',
     description: '',
+    phone_number: '',
+    vacancies: 0,
+    hours: '',
   });
 
   // Fetch resource details
@@ -90,34 +95,17 @@ function ResourceDetail() {
 
           {isEditing && (
             <form onSubmit={handleEditSubmit}>
-              <h3>Edit Resource</h3>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-              <input
-                type="text"
-                name="category"
-                value={formData.category}
-                onChange={handleChange}
-                required
-              />
-              <input
-                type="text"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-                required
-              />
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                required
-              />
+              <h2>Edit Resource</h2>
+              <input type="text" name="name" value={formData.name} onChange={handleChange} required />
+              <input type="text" name="category" value={formData.category} onChange={handleChange} required />
+              <input type="text" name="url" value={formData.url} onChange={handleChange} placeholder="Resource URL" />
+              <input type="text" name="image_url" value={formData.image_url} onChange={handleChange} placeholder="Image URL" />
+              <input type="text" name="location" value={formData.location} onChange={handleChange} required />
+              <textarea name="description" value={formData.description} onChange={handleChange} required />
+              <input type="text" name="phone_number" value={formData.phone_number} onChange={handleChange} placeholder="Phone Number" />
+              <input type="number" name="vacancies" value={formData.vacancies} onChange={handleChange} placeholder="Vacancies" />
+              <input type="text" name="hours" value={formData.hours} onChange={handleChange} placeholder="Hours" />
+              <input type="number" step="0.1" name="rating" value={formData.rating} onChange={handleChange} placeholder="Rating" />
               <button type="submit">Submit</button>
             </form>
           )}

@@ -87,7 +87,7 @@ app.post('/api/refresh-token', (req, res) => {
 
 // Add resource endpoint
 app.post('/api/resources', async (req, res) => {
-  const { name, category, location, description, user_id } = req.body;
+  const { name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours, rating } = req.body;
   
   // Verify Authorization Token
   const token = req.headers['authorization'];
@@ -95,8 +95,8 @@ app.post('/api/resources', async (req, res) => {
   
   try {
     const result = await pool.query(
-      'INSERT INTO moderated_resources (name, category, location, description, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
-      [name, category, location, description, user_id]
+      'INSERT INTO moderated_resources (name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours, rating) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
+      [name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours, rating]
     );
     res.json(result.rows[0]); // Return the added resource for moderation
   } catch (err) {
@@ -108,7 +108,7 @@ app.post('/api/resources', async (req, res) => {
 // Update resource endpoint
 app.put('/api/resources/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, category, location, description } = req.body;
+  const { name, category, url, image_url, location, description, phone_number, vacancies, hours, rating } = req.body;
 
   const token = req.headers['authorization'];
   if (!token) return res.status(401).send('Access denied');
@@ -123,8 +123,8 @@ app.put('/api/resources/:id', async (req, res) => {
     }
 
     const result = await pool.query(
-      'UPDATE moderated_resources SET name = $1, category = $2, location = $3, description = $4 WHERE id = $5 RETURNING *',
-      [name, category, location, description, id]
+      'UPDATE moderated_resources SET name = $1, category = $2, url = $3, image_url = $4, location = $5, description = $6, phone_number = $7, vacancies = $8, hours = $9, rating = $10 WHERE id = $11 RETURNING *',
+      [name, category, url, image_url, location, description, phone_number, vacancies, hours, rating, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).send('Resource not found');
@@ -199,7 +199,10 @@ app.get('/api/resources', async (req, res) => {
 app.get('/api/resources/:id', async (req, res) => {
   const { id } = req.params;
   try {
-    const result = await pool.query('SELECT * FROM resources WHERE id = $1', [id]);
+    let result = await pool.query('SELECT * FROM resources WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      result = await pool.query('SELECT * FROM moderated_resources WHERE id = $1', [id]);
+    }
     if (result.rows.length === 0) {
       return res.status(404).send('Resource not found');
     }
@@ -230,7 +233,8 @@ app.get('/api/user/resources', async (req, res) => {
   try {
     const verified = jwt.verify(token, SECRET_KEY);
     const userId = verified.id;
-    const results = await pool.query('SELECT * FROM moderated_resources WHERE user_id = $1', [userId]);
+    const results = await pool.query(`SELECT * FROM moderated_resources WHERE user_id = $1
+      UNION SELECT * FROM resources WHERE user_id = $1`, [userId]);
     res.json(results.rows);
   } catch (err) {
     console.error('Error fetching user resources:', err);
