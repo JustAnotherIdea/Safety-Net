@@ -1,3 +1,4 @@
+CREATE SEQUENCE resource_id_seq;
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
@@ -26,7 +27,7 @@ CREATE TABLE resources (
 );
 
 CREATE TABLE moderated_resources (
-  id SERIAL PRIMARY KEY,
+  id INT DEFAULT nextval('resource_id_seq') PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   category VARCHAR(50) NOT NULL,
   url VARCHAR(255),
@@ -41,11 +42,3 @@ CREATE TABLE moderated_resources (
   status VARCHAR(20) DEFAULT 'pending',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-INSERT INTO users (name, email, password) VALUES
-  ('John Doe', 'john@example.com', 'password123'),
-  ('Jane Smith', 'jane@example.com', 'password123');
-
-INSERT INTO resources (user_id, name, category, location, description) VALUES
-  (1, 'Food Bank', 'Food', '123 Main St', 'Provides free food to those in need'),
-  (2, 'Shelter', 'Housing', '456 Elm St', 'Provides shelter to homeless individuals');

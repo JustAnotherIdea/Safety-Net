@@ -144,11 +144,18 @@ app.put('/api/moderated-resources/:id/approve', async (req, res) => {
     if (result.rows.length === 0) {
       return res.status(404).send('Resource not found');
     }
+
+    const { name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours, rating} = result.rows[0];
+
+    // Insert the resource into the resources table, maintaining the same ID
     await pool.query(
-      'INSERT INTO resources (name, category, location, description, user_id) VALUES ($1, $2, $3, $4, $5)',
-      [result.rows[0].name, result.rows[0].category, result.rows[0].location, result.rows[0].description, result.rows[0].user_id]
+      'INSERT INTO resources (id, name, category, url, image_url, location, description, phone_number, vacancies, hours, rating, user_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
+      [id, name, category, url, image_url, location, description, phone_number, vacancies, hours, rating, user_id, 'approved']
     );
+
+    // Update moderation status
     await pool.query('UPDATE moderated_resources SET status = $1 WHERE id = $2', ['approved', id]);
+
     res.sendStatus(204); // No content
   } catch (err) {
     console.error('Error approving resource:', err);
