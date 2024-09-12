@@ -36,6 +36,7 @@ client.connect().then(() => {
   const modifiedSchema = `
   -- Drop existing tables if they exist
   DROP TABLE IF EXISTS resources CASCADE;
+  DROP TABLE IF EXISTS moderated_resources CASCADE;
   DROP TABLE IF EXISTS users CASCADE;
 
   ${schema}

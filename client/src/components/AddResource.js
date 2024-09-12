@@ -23,8 +23,14 @@ function AddResource() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.post('http://localhost:3000/api/resources', formData, {
-        headers: {'Authorization': token}
+      const userId = JSON.parse(atob(token.split('.')[1])).id;
+      await axios.post('http://localhost:3000/api/resources', {
+        ...formData,
+        user_id: userId, // Include user ID when submitting
+      }, {
+        headers: {
+          'Authorization': token
+        }
       });
       alert('Resource added successfully!');  // User feedback
       navigate('/my-resources'); // Redirect to My Resources

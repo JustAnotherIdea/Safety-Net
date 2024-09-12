@@ -95,10 +95,10 @@ app.post('/api/resources', async (req, res) => {
   
   try {
     const result = await pool.query(
-      'INSERT INTO resources (name, category, location, description, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      'INSERT INTO moderated_resources (name, category, location, description, user_id) VALUES ($1, $2, $3, $4, $5) RETURNING *',
       [name, category, location, description, user_id]
     );
-    res.json(result.rows[0]); // Return the added resource
+    res.json(result.rows[0]); // Return the added resource for moderation
   } catch (err) {
     console.error('Error adding resource:', err);
     res.status(500).send('Server error');
@@ -117,13 +117,13 @@ app.put('/api/resources/:id', async (req, res) => {
     const verified = jwt.verify(token, SECRET_KEY);
     const userId = verified.id;
 
-    const resourceCheck = await pool.query('SELECT * FROM resources WHERE id = $1 AND user_id = $2', [id, userId]);
+    const resourceCheck = await pool.query('SELECT * FROM moderated_resources WHERE id = $1 AND user_id = $2', [id, userId]);
     if (resourceCheck.rows.length === 0) {
       return res.status(403).send('You are not authorized to update this resource'); // Forbidden
     }
 
     const result = await pool.query(
-      'UPDATE resources SET name = $1, category = $2, location = $3, description = $4 WHERE id = $5 RETURNING *',
+      'UPDATE moderated_resources SET name = $1, category = $2, location = $3, description = $4 WHERE id = $5 RETURNING *',
       [name, category, location, description, id]
     );
     if (result.rows.length === 0) {
@@ -132,6 +132,26 @@ app.put('/api/resources/:id', async (req, res) => {
     res.json(result.rows[0]);
   } catch (err) {
     console.error('Error updating resource:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Approve resource endpoint
+app.put('/api/moderated-resources/:id/approve', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM moderated_resources WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      return res.status(404).send('Resource not found');
+    }
+    await pool.query(
+      'INSERT INTO resources (name, category, location, description, user_id) VALUES ($1, $2, $3, $4, $5)',
+      [result.rows[0].name, result.rows[0].category, result.rows[0].location, result.rows[0].description, result.rows[0].user_id]
+    );
+    await pool.query('UPDATE moderated_resources SET status = $1 WHERE id = $2', ['approved', id]);
+    res.sendStatus(204); // No content
+  } catch (err) {
+    console.error('Error approving resource:', err);
     res.status(500).send('Server error');
   }
 });
@@ -190,6 +210,18 @@ app.get('/api/resources/:id', async (req, res) => {
   }
 });
 
+// Reject resource endpoint
+app.delete('/api/moderated-resources/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM moderated_resources WHERE id = $1', [id]);
+    res.sendStatus(204); // No content
+  } catch (err) {
+    console.error('Error rejecting resource:', err);
+    res.status(500).send('Server error');
+  }
+});
+
 // Get resources for the logged-in user
 app.get('/api/user/resources', async (req, res) => {
   const token = req.headers['authorization'];
@@ -198,7 +230,7 @@ app.get('/api/user/resources', async (req, res) => {
   try {
     const verified = jwt.verify(token, SECRET_KEY);
     const userId = verified.id;
-    const results = await pool.query('SELECT * FROM resources WHERE user_id = $1', [userId]);
+    const results = await pool.query('SELECT * FROM moderated_resources WHERE user_id = $1', [userId]);
     res.json(results.rows);
   } catch (err) {
     console.error('Error fetching user resources:', err);
