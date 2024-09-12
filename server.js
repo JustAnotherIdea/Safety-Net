@@ -139,7 +139,19 @@ app.put('/api/resources/:id', async (req, res) => {
 // Approve resource endpoint
 app.put('/api/moderated-resources/:id/approve', async (req, res) => {
   const { id } = req.params;
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).send('Access denied');
+
   try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+
+    // Check user's role
+    const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length === 0 || !['admin', 'moderator'].includes(userResult.rows[0].role)) {
+      return res.status(403).send('You are not authorized to approve resources'); // Forbidden
+    }
+
     const result = await pool.query('SELECT * FROM moderated_resources WHERE id = $1', [id]);
     if (result.rows.length === 0) {
       return res.status(404).send('Resource not found');
@@ -269,6 +281,33 @@ app.delete('/api/resources/:id', async (req, res) => {
     res.sendStatus(204);
   } catch (err) {
     console.error('Error deleting resource:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Change user role endpoint
+app.put('/api/users/:id/role', async (req, res) => {
+  const { id } = req.params;
+  const { newRole } = req.body; // Expecting a new role in the request body
+
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+
+    // Check if current user is an admin
+    const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length === 0 || userResult.rows[0].role !== 'admin') {
+      return res.status(403).send('You are not authorized to change user roles'); // Forbidden
+    }
+
+    // Update user role
+    await pool.query('UPDATE users SET role = $1 WHERE id = $2', [newRole, id]);
+    res.sendStatus(204); // No content
+  } catch (err) {
+    console.error('Error changing user role:', err);
     res.status(500).send('Server error');
   }
 });
