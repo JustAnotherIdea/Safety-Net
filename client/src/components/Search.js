@@ -2,19 +2,31 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Search.css';
 import { Link } from 'react-router-dom';
+
 function Search() {
+  const storedPlaceId = localStorage.getItem('place_id');
+  const storedAddress = localStorage.getItem('address');
+  const storedLat = localStorage.getItem('lat');
+  const storedLng = localStorage.getItem('lng');
+  const [placeId, setPlaceId] = useState(storedPlaceId || '');
+  let lastPlaceId = placeId;
+  const [address, setAddress] = useState(storedAddress || '');
+  const [lat, setLat] = useState(storedLat || '');
+  const [lng, setLng] = useState(storedLng || '');
+  const [maxDistance, setMaxDistance] = useState(50);
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [resources, setResources] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [loading, setLoading] = useState(false); // For loading state
+  const [loading, setLoading] = useState(false);
+  const [places, setPlaces] = useState([]);
   const categories = ['Food', 'Housing', 'Health', 'Education']; 
   const fetchResources = async () => {
     if (loading) return; // Avoid fetching if already loading
     setLoading(true);
     try {
       const response = await axios.get(`http://localhost:3000/api/resources`, {
-        params: { query, category: selectedCategory, page: currentPage, limit: 10 }
+        params: { query, category: selectedCategory, page: currentPage, limit: 10, lat, lng, maxDistance }
       });
       // Check and only append new unique resources
       setResources(prevResources => {
@@ -29,7 +41,48 @@ function Search() {
       setLoading(false);
     }
   };
+
+  let typingTimer; // Declare a timer variable outside the function
+  const typingDelay = 500; // Delay in milliseconds (adjust as needed)
+
+  const handleInputChange = async (e) => {
+    const inputValue = e.target.value;
+    setQuery(inputValue);
+
+    // Clear the previous timer if the user keeps typing
+    clearTimeout(typingTimer);
+
+    // Set a new timer that will wait before making the API call
+    typingTimer = setTimeout(async () => {
+      if (inputValue) { // Ensure the input is not empty
+        const response = await axios.get(`http://localhost:3000/api/places/autocomplete`, {
+          params: { input: inputValue }
+        });
+        setPlaces(response.data);
+      }
+    }, typingDelay);
+  };
+
+  const getLocation = async () => {
+    if (placeId !== lastPlaceId) {
+      const response = await axios.get(`http://localhost:3000/api/places/location`, {
+        params: { place_id: placeId }
+      });
+      const details = {
+        address: response.data.result.formatted_address,
+        lat: response.data.result.geometry.location.lat,
+        lng: response.data.result.geometry.location.lng
+      };
+      setAddress(details.address);
+      setLat(details.lat);
+      setLng(details.lng);
+      localStorage.setItem('address', details.address);
+      localStorage.setItem('lat', details.lat);
+      localStorage.setItem('lng', details.lng);
+    }
+  }
   const handleSearch = () => {
+    getLocation();
     setCurrentPage(1); 
     setResources([]); // Reset resources for new search
     fetchResources(); // Fetch resources with the current page
@@ -59,6 +112,24 @@ function Search() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Enter search query"
+      />
+      <input
+        type="text"
+        className="location-input"
+        value={address}
+        onChange={handleInputChange}
+        placeholder={address !== '' ? address : 'Enter address'}
+      />
+      {/* Display autocomplete suggestions */}
+      {places.map(place => (
+        <div key={place.place_id} onClick={() => setPlaceId(place.place_id)}>{place.description}</div>
+      ))}
+      <input
+        type="number"
+        className="distance-input"
+        value={maxDistance}
+        onChange={(e) => setMaxDistance(e.target.value)}
+        placeholder="Max Distance (miles)"
       />
       <select value={selectedCategory} onChange={(e) => {
         setSelectedCategory(e.target.value);
