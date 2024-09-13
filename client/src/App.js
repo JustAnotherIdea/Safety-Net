@@ -14,6 +14,8 @@ import Protected from './components/Protected';
 import AddResource from './components/AddResource';
 import MyResources from './components/MyResources';
 import ResourceDetail from './components/ResourceDetail'; // Import ResourceDetail
+import AdminUsers from './components/AdminUsers';
+import AdminModeration from './components/AdminModeration';
 import { ToastContainer } from 'react-toastify'; // Import ToastContainer
 import 'react-toastify/dist/ReactToastify.css'; // Import styles for notifications
 
@@ -34,7 +36,9 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/my-resources" element={<MyResources />} />
           <Route path="/add-resource" element={<AddResource />} />
-          <Route path="/resource/:id" element={<ResourceDetail />} /> {/* Route for Resource Detail */}
+          <Route path="/resource/:id" element={<ResourceDetail />} />
+          <Route path="/admin-users" element={<AdminUsers />} />
+          <Route path="/admin-moderation" element={<AdminModeration />} />
         </Routes>
       </div>
     </Router>

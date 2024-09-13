@@ -33,6 +33,8 @@ function Navbar() {
             <li><Link to="/register">Register</Link></li>
           </>
         )}
+        {isAuthenticated && <li><Link to="/admin-users">Manage Users</Link></li>} {/* Admin link */}
+        {isAuthenticated && <li><Link to="/admin-moderation">Moderate Resources</Link></li>} {/* Moderation link */}
       </ul>
     </nav>
   );

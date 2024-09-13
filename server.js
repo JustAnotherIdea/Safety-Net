@@ -87,7 +87,7 @@ app.post('/api/refresh-token', (req, res) => {
 
 // Add resource endpoint
 app.post('/api/resources', async (req, res) => {
-  const { name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours, rating } = req.body;
+  const { name, category, url, image_url, location, description, user_id, phone_number, vacancies = 0, hours, rating = 0 } = req.body;
   
   // Verify Authorization Token
   const token = req.headers['authorization'];
@@ -235,7 +235,19 @@ app.get('/api/resources/:id', async (req, res) => {
 // Reject resource endpoint
 app.delete('/api/moderated-resources/:id', async (req, res) => {
   const { id } = req.params;
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).send('Access denied');
+
   try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+
+    // Check user's role
+    const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length === 0 || !['admin', 'moderator'].includes(userResult.rows[0].role)) {
+      return res.status(403).send('You are not authorized to reject resources'); // Forbidden
+    }
+    
     await pool.query('DELETE FROM moderated_resources WHERE id = $1', [id]);
     res.sendStatus(204); // No content
   } catch (err) {
@@ -252,7 +264,7 @@ app.get('/api/user/resources', async (req, res) => {
   try {
     const verified = jwt.verify(token, SECRET_KEY);
     const userId = verified.id;
-    const results = await pool.query(`SELECT * FROM moderated_resources WHERE user_id = $1
+    const results = await pool.query(`SELECT * FROM moderated_resources WHERE user_id = $1 AND status != 'approved'
       UNION SELECT * FROM resources WHERE user_id = $1`, [userId]);
     res.json(results.rows);
   } catch (err) {
@@ -281,6 +293,52 @@ app.delete('/api/resources/:id', async (req, res) => {
     res.sendStatus(204);
   } catch (err) {
     console.error('Error deleting resource:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Get all moderated resources
+app.get('/api/moderated-resources', async (req, res) => {
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+
+    // Check user's role
+    const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length === 0 || !['admin', 'moderator'].includes(userResult.rows[0].role)) {
+      return res.status(403).send('You are not a moderator'); // Forbidden
+    }
+
+    const results = await pool.query(`SELECT * FROM moderated_resources WHERE status = 'pending'`);
+    res.json(results.rows); // Return all moderated resources
+  } catch (err) {
+    console.error('Error fetching moderated resources:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Get all users
+app.get('/api/users', async (req, res) => {
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+
+    // Check if the user is an admin
+    const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length === 0 || userResult.rows[0].role !== 'admin') {
+      return res.status(403).send('Access denied: You are not an admin'); // Forbidden
+    }
+
+    const results = await pool.query('SELECT id, name, email, role FROM users'); // Select only relevant
+    res.json(results.rows); // Return all users
+  } catch (err) {
+    console.error('Error fetching users:', err);
     res.status(500).send('Server error');
   }
 });
