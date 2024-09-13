@@ -1,9 +1,7 @@
 import React from 'react';
-import useAuth from '../hooks/useAuth';
 import { Link, useNavigate } from 'react-router-dom';
 
 function Navbar() {
-  useAuth();
   const navigate = useNavigate();
   const isAuthenticated = localStorage.getItem('token') !== null;
 

@@ -44,7 +44,9 @@ app.post('/api/register', async (req, res) => {
       'INSERT INTO users (name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING *',
       [name, email, hashedPassword, role]
     );
-    res.json(result.rows[0]);
+    const user = result.rows[0]; 
+    const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
+    res.json({ token });
   } catch (err) {
     console.error('Error registering user:', err);
     res.status(500).send('Server error');

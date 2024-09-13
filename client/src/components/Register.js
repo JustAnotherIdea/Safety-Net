@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Use navigate for redirecting
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -7,6 +8,7 @@ function Register() {
     email: '',
     password: '',
   });
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -19,7 +21,9 @@ function Register() {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:3000/api/register', formData);
-      console.log('User registered:', response.data);
+      const token = response.data.token;
+      localStorage.setItem('token', token);
+      navigate('/');
     } catch (err) {
       console.error('Error registering user:', err);
     }
