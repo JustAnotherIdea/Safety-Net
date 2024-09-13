@@ -10,6 +10,15 @@ function Navbar() {
     navigate('/');
   };
 
+  const getUserRole = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return null;
+    const decoded = JSON.parse(atob(token.split('.')[1])); // Decode the JWT to get user info
+    return decoded.role; // Extract role from token
+  };
+
+  const userRole = getUserRole(); // Get the current user's role
+
   return (
     <nav>
       <ul>
@@ -23,6 +32,8 @@ function Navbar() {
           <>
             <li><Link to="/my-resources">My Resources</Link></li>
             <li><Link to="/add-resource">Add Resource</Link></li>
+            {userRole === 'admin' && <li><Link to="/admin-users">Manage Users</Link></li>}  {/* Visible only to admins */}
+            {userRole === 'moderator' && <li><Link to="/admin-moderation">Moderate Resources</Link></li>}  {/* Visible only to moderators */}
             <li><button onClick={handleLogout}>Logout</button></li>
           </>
         ) : (
@@ -31,8 +42,6 @@ function Navbar() {
             <li><Link to="/register">Register</Link></li>
           </>
         )}
-        {isAuthenticated && <li><Link to="/admin-users">Manage Users</Link></li>} {/* Admin link */}
-        {isAuthenticated && <li><Link to="/admin-moderation">Moderate Resources</Link></li>} {/* Moderation link */}
       </ul>
     </nav>
   );
