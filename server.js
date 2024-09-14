@@ -13,7 +13,6 @@ const googleClient = new Client();
 const googleAPIKey = process.env.GOOGLE_MAPS_API_KEY;
 
 const app = express();
-console.log(process.env.PORT);
 const port = process.env.PORT || 3000;
 const SECRET_KEY = 'your_secret_key';
 const REFRESH_SECRET_KEY = 'your_refresh_secret_key';
@@ -229,35 +228,34 @@ app.put('/api/moderated-resources/:id/approve', async (req, res) => {
   }
 });
 
-// Search endpoint with location, distance, and category filtering
+// Search endpoint with category filtering and pagination for infinite scrolling
 app.get('/api/resources', async (req, res) => {
-  const { query, category, latitude, longitude, maxDistance = 10, page = 1, limit = 10 } = req.query;
-
+  const { query, category, page = 1, limit = 10 } = req.query; // Default values for page and limit
   const queryParams = [];
-  let sqlQuery = `
-    SELECT *,
-      (3959 * acos(
-        cos(radians($1)) * cos(radians(latitude)) *
-        cos(radians(longitude) - radians($2)) +
-        sin(radians($1)) * sin(radians(latitude))
-    FROM resources
-    WHERE (name ILIKE $3 OR description ILIKE $3)
-  `;
-  queryParams.push(latitude, longitude, `%${query}%`);
+  
+  // Start building the SQL query
+  let sqlQuery = `SELECT * FROM resources WHERE (name ILIKE $1 OR description ILIKE $1)`;
+  queryParams.push(`%${query}%`);
 
   // If category is provided, add it as a filter
   if (category && category !== '') {
-    sqlQuery += ` AND category = $4`;
+    sqlQuery += ` AND category = $2`;
     queryParams.push(category);
+    // Calculate the offset for pagination
+    const offset = (page - 1) * limit;
+    
+    // Append pagination to the SQL query
+    sqlQuery += ` LIMIT $3 OFFSET $4`;
+    queryParams.push(limit, offset);
+  } else {
+    // Calculate the offset for pagination
+    const offset = (page - 1) * limit;
+    
+    // Append pagination to the SQL query
+    sqlQuery += ` LIMIT $2 OFFSET $3`;
+    queryParams.push(limit, offset);
   }
 
-  sqlQuery += ` HAVING distance <= $5`; // Filter for max distance
-  queryParams.push(maxDistance);
-
-  // Calculate the offset for pagination
-  const offset = (page - 1) * limit;
-  sqlQuery += ` LIMIT $6 OFFSET $7`;
-  queryParams.push(limit, offset);
 
   try {
     const results = await pool.query(sqlQuery, queryParams);
