@@ -30,6 +30,21 @@ client.connect().then(() => {
     port: 5432,
   });
 
+  async function hashPasswords() {
+    try {
+      const res = await pool.query('SELECT * FROM users');
+      for (const user of res.rows) {
+        const hashedPassword = await bcrypt.hash(user.password, 10);
+        await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, user.id]);
+        console.log(`Updated password for user: ${user.email}`);
+      }
+    } catch (err) {
+      console.error('Error updating passwords:', err);
+    } finally {
+      pool.end();
+    }
+  }
+  
   const schemaPath = path.join(__dirname, 'schema.sql');
   const schema = fs.readFileSync(schemaPath, 'utf8');
 
@@ -47,6 +62,7 @@ client.connect().then(() => {
       console.error('Error executing schema', err.stack);
     } else {
       console.log('Database schema created successfully');
+      hashPasswords();
     }
     pool.end();
   });
