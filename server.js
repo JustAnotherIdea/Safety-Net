@@ -228,43 +228,74 @@ app.put('/api/moderated-resources/:id/approve', async (req, res) => {
   }
 });
 
-// Search endpoint with category filtering and pagination for infinite scrolling
 app.get('/api/resources', async (req, res) => {
-  const { query, category, page = 1, limit = 10 } = req.query; // Default values for page and limit
+  const { query, category, page = 1, limit = 10, latitude, longitude, maxDistance } = req.query;
+
+  const radius = Number(maxDistance) || 50;  // Default max distance is 50 miles
+  const searchQuery = query ? `%%${query}%%` : '%%';  // Escape the query for SQL injection
   const queryParams = [];
-  
-  // Start building the SQL query
-  let sqlQuery = `SELECT * FROM resources WHERE (name ILIKE $1 OR description ILIKE $1)`;
-  queryParams.push(`%${query}%`);
+  let paramIndex = 1;  // Initialize parameter index
+
+  console.log(latitude, longitude, maxDistance);
+
+  const latitudeNum = Number(latitude);  // Cast latitude to a number
+  const longitudeNum = Number(longitude);  // Cast longitude to a number
+
+  let sqlQuery = `SELECT *`;
+
+  // If latitude and longitude are provided, calculate distance in miles
+  if (latitudeNum && longitudeNum) {
+    sqlQuery += `, (earth_distance(ll_to_earth($${paramIndex}, $${paramIndex + 1}), ll_to_earth(latitude, longitude)) / 1609.34) AS distance_miles`;
+    queryParams.push(latitudeNum, longitudeNum);  // Push as numbers
+    paramIndex += 2;  // Increment the index by 2 for latitude and longitude
+  }
+
+  sqlQuery += ` FROM resources WHERE (name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
+  queryParams.push(searchQuery);
+  paramIndex++;  // Increment after adding search query
+
+  // If latitude and longitude are provided, add distance filtering
+  if (latitudeNum && longitudeNum) {
+    sqlQuery += ` AND earth_box(ll_to_earth($${paramIndex - 3}, $${paramIndex - 2}), $${paramIndex} * 1609.34) @> ll_to_earth(latitude, longitude)
+                  AND earth_distance(ll_to_earth($${paramIndex - 3}, $${paramIndex - 2}), ll_to_earth(latitude, longitude)) <= $${paramIndex} * 1609.34`;
+    queryParams.push(radius);
+    paramIndex++;  // Increment after adding radius
+  }
 
   // If category is provided, add it as a filter
   if (category && category !== '') {
-    sqlQuery += ` AND category = $2`;
+    sqlQuery += ` AND category = $${paramIndex}`;
     queryParams.push(category);
-    // Calculate the offset for pagination
-    const offset = (page - 1) * limit;
-    
-    // Append pagination to the SQL query
-    sqlQuery += ` LIMIT $3 OFFSET $4`;
-    queryParams.push(limit, offset);
-  } else {
-    // Calculate the offset for pagination
-    const offset = (page - 1) * limit;
-    
-    // Append pagination to the SQL query
-    sqlQuery += ` LIMIT $2 OFFSET $3`;
-    queryParams.push(limit, offset);
+    paramIndex++;  // Increment after adding category
   }
 
+  if (latitudeNum && longitudeNum) {
+    sqlQuery += ` ORDER BY distance_miles`;
+  }
+
+  // Add pagination and ordering by distance
+  const offset = (page - 1) * limit;
+  sqlQuery += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+  queryParams.push(limit, offset);
+
+  // Debugging: Log SQL query and parameters
+  console.log('SQL Query:', sqlQuery);
+  console.log('Query Parameters:', queryParams);
 
   try {
     const results = await pool.query(sqlQuery, queryParams);
-    res.json(results.rows); // Return the results as JSON
+    console.log('Query Results:', results.rows);
+    res.json(results.rows); // Return the results
   } catch (err) {
     console.error('Error fetching resources:', err);
     res.status(500).send('Server error');
   }
 });
+
+
+
+
+
 
 
 // Get resource by ID

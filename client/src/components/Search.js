@@ -9,7 +9,7 @@ function Search() {
   const storedLat = localStorage.getItem('lat');
   const storedLng = localStorage.getItem('lng');
   const [placeId, setPlaceId] = useState(storedPlaceId || '');
-  let lastPlaceId = placeId;
+  let lastPlaceId = storedPlaceId;
   const [address, setAddress] = useState(storedAddress || '');
   const [lat, setLat] = useState(storedLat || '');
   const [lng, setLng] = useState(storedLng || '');
@@ -25,9 +25,11 @@ function Search() {
     if (loading) return; // Avoid fetching if already loading
     setLoading(true);
     try {
+      console.log("Getting resources");
       const response = await axios.get(`http://localhost:3000/api/resources`, {
-        params: { query, category: selectedCategory, page: currentPage, limit: 10, lat, lng, maxDistance }
+        params: { query, category: selectedCategory, page: currentPage, limit: 10, latitude: lat, longitude: lng, maxDistance: maxDistance }
       });
+      console.log( query, selectedCategory, currentPage, lat, lng, maxDistance );
       // Check and only append new unique resources
       setResources(prevResources => {
         const newResources = response.data.filter(res =>
@@ -45,9 +47,9 @@ function Search() {
   let typingTimer; // Declare a timer variable outside the function
   const typingDelay = 500; // Delay in milliseconds (adjust as needed)
 
-  const handleInputChange = async (e) => {
+  const handleLocationInputChange = async (e) => {
     const inputValue = e.target.value;
-    setQuery(inputValue);
+    setAddress(inputValue);
 
     // Clear the previous timer if the user keeps typing
     clearTimeout(typingTimer);
@@ -68,21 +70,22 @@ function Search() {
       const response = await axios.get(`http://localhost:3000/api/places/location`, {
         params: { place_id: placeId }
       });
+      console.log(response);
       const details = {
-        address: response.data.result.formatted_address,
-        lat: response.data.result.geometry.location.lat,
-        lng: response.data.result.geometry.location.lng
+        address: response.data.address,
+        lat: response.data.lat,
+        lng: response.data.lng
       };
-      setAddress(details.address);
+      console.log("Setting lat and lng", details.lat, details.lng);
       setLat(details.lat);
       setLng(details.lng);
-      localStorage.setItem('address', details.address);
       localStorage.setItem('lat', details.lat);
       localStorage.setItem('lng', details.lng);
+      lastPlaceId = placeId;
     }
   }
   const handleSearch = () => {
-    getLocation();
+    console.log("searching");
     setCurrentPage(1); 
     setResources([]); // Reset resources for new search
     fetchResources(); // Fetch resources with the current page
@@ -101,8 +104,13 @@ function Search() {
     return () => window.removeEventListener('scroll', handleScroll); // Cleanup
   }, [loading]);
   useEffect(() => {
-    fetchResources(); // Fetch resources when current page, query, or category change
+    handleSearch(); // Fetch resources when current page, query, or category change
   }, [currentPage, query, selectedCategory]);
+  useEffect(() => {
+    if (placeId !== lastPlaceId) {
+      getLocation();
+    }
+  }, [placeId]);
   return (
     <div className="search-container">
       <h1>Search for Resources</h1>
@@ -117,12 +125,17 @@ function Search() {
         type="text"
         className="location-input"
         value={address}
-        onChange={handleInputChange}
+        onChange={handleLocationInputChange}
         placeholder={address !== '' ? address : 'Enter address'}
       />
       {/* Display autocomplete suggestions */}
       {places.map(place => (
-        <div key={place.place_id} onClick={() => setPlaceId(place.place_id)}>{place.description}</div>
+        <div key={place.place_id} onClick={() => {
+          setPlaceId(place.place_id);
+          setAddress(place.description);
+          localStorage.setItem('address', place.description);
+          console.log("place id", place.place_id);
+        }}>{place.description}</div>
       ))}
       <input
         type="number"
