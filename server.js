@@ -1,3 +1,4 @@
+const AWS = require('aws-sdk');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -7,6 +8,19 @@ const cookieParser = require('cookie-parser');
 const axios = require('axios');
 const { Pool } = require('pg');
 const { Client } = require('@googlemaps/google-maps-services-js');
+const multer = require('multer');
+const upload = multer({
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+});
+
+// Configure the AWS SDK with your credentials and region
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY, // Replace with your actual access ke
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY, // Replace with your actual secretkey
+  region: 'us-east-1' // e.g., 'us-east-1'
+});
+
+const s3 = new AWS.S3();
 
 const googleClient = new Client();
 
@@ -35,6 +49,52 @@ pool.connect((err) => {
   } else {
     console.log('Database connected');
   }
+});
+
+// Image upload endpoint
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  const { fileNameReq, fileTypeReq } = req.body;
+
+  console.log("request", req);
+
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB limit
+  const file = req.file; // The uploaded file information
+  const fileType = file.mimetype;
+  const fileName = file.originalname;
+  const validFileSize = file.size; // File size in bytes
+
+  console.log('File received:', file); // For debugging
+
+  console.log("file type", fileType);
+  // Check if file type matches and size is within the limit
+  if (fileType && fileType.match(/image\/(jpeg|jpg|png|gif)/)) {
+    if (validFileSize > MAX_SIZE) {
+      return res.status(400).send('File size exceeds the allowed limit of 5MB.');
+    }
+  } else {
+    return res.status(400).send('Invalid file type.');
+  }
+
+  const s3Params = {
+    Bucket: 'safety-net-images', // Replace with your bucket name
+    Key: fileNameReq, // File name you want to save as
+    Expires: 60, // Time in seconds for the signed URL to remain valid
+    ContentType: fileTypeReq, // The content type of the file
+    ACL: 'public-read' // Makes the uploaded file publicly readable
+  };
+
+  // Create a signed URL for uploading
+  s3.getSignedUrl('putObject', s3Params, (err, url) => {
+    if (err) {
+      console.error('Error getting signed URL:', err);
+      return res.status(500).send('Error getting signed URL');
+    }
+    res.json({ url }); // Send the signed URL back to the client
+  });
 });
 
 // Place autocomplete endpoint
