@@ -30,6 +30,31 @@ client.connect().then(() => {
     port: 5432,
   });
 
+  const schemaPath = path.join(__dirname, 'schema.sql');
+  const schema = fs.readFileSync(schemaPath, 'utf8');
+  
+  const modifiedSchema = `
+  -- Drop existing tables if they exist
+  DROP TABLE IF EXISTS resources CASCADE;
+  DROP TABLE IF EXISTS moderated_resources CASCADE;
+  DROP TABLE IF EXISTS users CASCADE;
+  DROP SEQUENCE IF EXISTS resource_id_seq;
+  DROP EXTENSION IF EXISTS earthdistance;
+  DROP EXTENSION IF EXISTS cube;
+  
+  ${schema}
+  `;
+  
+  pool.query(modifiedSchema, (err, res) => {
+    if (err) {
+      console.error('Error executing schema', err.stack);
+    } else {
+      console.log('Database schema created successfully');
+      hashPasswords();
+    }
+    pool.end();
+  });
+
   async function hashPasswords() {
     try {
       const res = await pool.query('SELECT * FROM users');
@@ -44,29 +69,4 @@ client.connect().then(() => {
       pool.end();
     }
   }
-  
-  const schemaPath = path.join(__dirname, 'schema.sql');
-  const schema = fs.readFileSync(schemaPath, 'utf8');
-
-  const modifiedSchema = `
-  -- Drop existing tables if they exist
-  DROP TABLE IF EXISTS resources CASCADE;
-  DROP TABLE IF EXISTS moderated_resources CASCADE;
-  DROP TABLE IF EXISTS users CASCADE;
-  DROP SEQUENCE IF EXISTS resource_id_seq;
-  DROP EXTENSION IF EXISTS earthdistance;
-  DROP EXTENSION IF EXISTS cube;
-
-  ${schema}
-  `;
-
-  pool.query(modifiedSchema, (err, res) => {
-    if (err) {
-      console.error('Error executing schema', err.stack);
-    } else {
-      console.log('Database schema created successfully');
-      hashPasswords();
-    }
-    pool.end();
-  });
 });
