@@ -242,7 +242,7 @@ app.post('/api/resources', async (req, res) => {
   try {
     const result = await pool.query(
       'INSERT INTO moderated_resources (name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
-      [name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours]
+      [name, category, url, image_url, location, description, user_id, phone_number, vacancies, JSON.stringify(hours)]
     );
     res.json(result.rows[0]); // Return the added resource for moderation
   } catch (err) {

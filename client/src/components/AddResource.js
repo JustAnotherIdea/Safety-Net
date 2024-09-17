@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import OpeningHours from './OpeningHours';
 
 function AddResource() {
   // const [formData, setFormData] = useState({
@@ -20,7 +21,7 @@ function AddResource() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [description, setDescription] = useState('');
   const [vacancies, setVacancies] = useState(0);
-  const [hours, setHours] = useState('');
+  const [hours, setHours] = useState([]);
   const [category, setCategory] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [placeId, setPlaceId] = useState('');
@@ -32,11 +33,8 @@ function AddResource() {
 
   const navigate = useNavigate();
 
-  // const handleChange = (e) => {
-  //   setFormData({
-  //     ...formData,
-  //     [e.target.name]: e.target.value,
-  //   });
+  // const handleHoursUpdate = (updatedHours) => {
+  //   setHours(updatedHours); // Update opening hours state
   // };
 
   let typingTimer; // Declare a timer variable outside the function
@@ -70,7 +68,7 @@ function AddResource() {
         address: response.data.address,
         lat: response.data.lat,
         lng: response.data.lng,
-        hours: response.data.opening_hours?.weekday_text,
+        hours: response.data.opening_hours?.periods,
         url: response.data.website,
         phoneNumber: response.data.international_phone_number,
         name: response.data.name,
@@ -246,12 +244,9 @@ function AddResource() {
         onChange={(e) => setVacancies(e.target.value)} 
         placeholder="Vacancies" 
       />
-      <input 
-        type="text" 
-        name="hours" 
-        value={hours} 
-        onChange={(e) => setHours(e.target.value)} 
-        placeholder="Hours" 
+      <OpeningHours
+        periods={hours} // Load existing hours for editing
+        setPeriods={setHours} // Update opening hours state
       />
       <button type="submit">Add Resource</button>
     </form>
