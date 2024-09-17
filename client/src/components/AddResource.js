@@ -85,6 +85,7 @@ function AddResource() {
       setName(details.name);
       setImageUrl(details.imageUrl);
       lastPlaceId = placeId;
+      setImageFile(null);
     }
   }
 
@@ -218,7 +219,10 @@ function AddResource() {
         type="text" 
         name="image_url" 
         value={imageUrl} 
-        onChange={(e) => setImageUrl(e.target.value)} 
+        onChange={(e) => {
+          setImageUrl(e.target.value)
+          setImageFile(null);
+        }} 
         placeholder="Image URL" 
       />
       <textarea 
