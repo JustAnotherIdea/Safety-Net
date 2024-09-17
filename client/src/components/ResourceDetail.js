@@ -105,7 +105,6 @@ function ResourceDetail() {
               <input type="text" name="phone_number" value={formData.phone_number} onChange={handleChange} placeholder="Phone Number" />
               <input type="number" name="vacancies" value={formData.vacancies} onChange={handleChange} placeholder="Vacancies" />
               <input type="text" name="hours" value={formData.hours} onChange={handleChange} placeholder="Hours" />
-              <input type="number" step="0.1" name="rating" value={formData.rating} onChange={handleChange} placeholder="Rating" />
               <button type="submit">Submit</button>
             </form>
           )}

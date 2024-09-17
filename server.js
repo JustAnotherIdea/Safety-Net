@@ -55,7 +55,7 @@ pool.connect((err) => {
 app.post('/api/upload', upload.single('file'), async (req, res) => {
   const { fileNameReq, fileTypeReq } = req.body;
 
-  console.log("request", req);
+  // console.log("request", req);
 
   if (!req.file) {
     return res.status(400).send('No file uploaded.');
@@ -67,9 +67,9 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   const fileName = file.originalname;
   const validFileSize = file.size; // File size in bytes
 
-  console.log('File received:', file); // For debugging
+  // console.log('File received:', file); // For debugging
 
-  console.log("file type", fileType);
+  // console.log("file type", fileType);
   // Check if file type matches and size is within the limit
   if (fileType && fileType.match(/image\/(jpeg|jpg|png|gif)/)) {
     if (validFileSize > MAX_SIZE) {
@@ -133,13 +133,46 @@ app.get('/api/places/location', async (req, res) => {
     }
   };
 
-  googleClient.placeDetails(args).then(APIres => {
-    const details = {
+  googleClient.placeDetails(args).then(async APIres => {
+    console.log("place details", APIres.data.result);
+    const locationDetails = {
       address: APIres.data.result.formatted_address,
       lat: APIres.data.result.geometry.location.lat,
       lng: APIres.data.result.geometry.location.lng
     }
-    res.json(details); // Return the details to the frontend
+
+    if (APIres.data.result.opening_hours) {
+      locationDetails.opening_hours = APIres.data.result.opening_hours;
+    }
+
+    if (APIres.data.result.website) {
+      locationDetails.website = APIres.data.result.website;
+    }
+
+    if (APIres.data.result.international_phone_number) {
+      locationDetails.international_phone_number = APIres.data.result.international_phone_number;
+    }
+
+    if (APIres.data.result.name) {
+      locationDetails.name = APIres.data.result.name;
+    }
+
+    if (APIres.data.result.photos && APIres.data.result.photos.length > 0) {
+      const photoReference = APIres.data.result.photos[0].photo_reference;
+      const imageRequestUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoReference}&key=${googleAPIKey}`;
+
+      try {
+        const imageResponse = await axios.get(imageRequestUrl);
+        const redirectedUrl = imageResponse.request.res.responseUrl;
+        console.log("redirected url", redirectedUrl);
+        res.json({ ...locationDetails, image: redirectedUrl });
+      } catch (error) {
+        console.error('Error fetching place image:', error);
+        res.status(500).send('Server error');
+      }
+    } else {
+      res.json(locationDetails);
+    }
   }).catch(error => {
     console.error('Error fetching places details:', error);
     res.status(500).send('Server error');
@@ -200,7 +233,7 @@ app.post('/api/refresh-token', (req, res) => {
 
 // Add resource endpoint
 app.post('/api/resources', async (req, res) => {
-  const { name, category, url, image_url, location, description, user_id, phone_number, vacancies = 0, hours, rating = 0 } = req.body;
+  const { name, category, url, image_url, location, description, user_id, phone_number, vacancies = 0, hours } = req.body;
   
   // Verify Authorization Token
   const token = req.headers['authorization'];
@@ -208,8 +241,8 @@ app.post('/api/resources', async (req, res) => {
   
   try {
     const result = await pool.query(
-      'INSERT INTO moderated_resources (name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours, rating) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *',
-      [name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours, rating]
+      'INSERT INTO moderated_resources (name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
+      [name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours]
     );
     res.json(result.rows[0]); // Return the added resource for moderation
   } catch (err) {
@@ -221,7 +254,7 @@ app.post('/api/resources', async (req, res) => {
 // Update resource endpoint
 app.put('/api/resources/:id', async (req, res) => {
   const { id } = req.params;
-  const { name, category, url, image_url, location, description, phone_number, vacancies, hours, rating } = req.body;
+  const { name, category, url, image_url, location, description, phone_number, vacancies, hours } = req.body;
 
   const token = req.headers['authorization'];
   if (!token) return res.status(401).send('Access denied');
@@ -236,8 +269,8 @@ app.put('/api/resources/:id', async (req, res) => {
     }
 
     const result = await pool.query(
-      'UPDATE moderated_resources SET name = $1, category = $2, url = $3, image_url = $4, location = $5, description = $6, phone_number = $7, vacancies = $8, hours = $9, rating = $10 WHERE id = $11 RETURNING *',
-      [name, category, url, image_url, location, description, phone_number, vacancies, hours, rating, id]
+      'UPDATE moderated_resources SET name = $1, category = $2, url = $3, image_url = $4, location = $5, description = $6, phone_number = $7, vacancies = $8, hours = $9 WHERE id = $10 RETURNING *',
+      [name, category, url, image_url, location, description, phone_number, vacancies, hours, id]
     );
     if (result.rows.length === 0) {
       return res.status(404).send('Resource not found');
@@ -270,12 +303,12 @@ app.put('/api/moderated-resources/:id/approve', async (req, res) => {
       return res.status(404).send('Resource not found');
     }
 
-    const { name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours, rating} = result.rows[0];
+    const { name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours} = result.rows[0];
 
     // Insert the resource into the resources table, maintaining the same ID
     await pool.query(
-      'INSERT INTO resources (id, name, category, url, image_url, location, description, phone_number, vacancies, hours, rating, user_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)',
-      [id, name, category, url, image_url, location, description, phone_number, vacancies, hours, rating, user_id, 'approved']
+      'INSERT INTO resources (id, name, category, url, image_url, location, description, phone_number, vacancies, hours, user_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
+      [id, name, category, url, image_url, location, description, phone_number, vacancies, hours, user_id, 'approved']
     );
 
     // Update moderation status
@@ -296,7 +329,7 @@ app.get('/api/resources', async (req, res) => {
   const queryParams = [];
   let paramIndex = 1;  // Initialize parameter index
 
-  console.log(latitude, longitude, maxDistance);
+  // console.log(latitude, longitude, maxDistance);
 
   const latitudeNum = Number(latitude);  // Cast latitude to a number
   const longitudeNum = Number(longitude);  // Cast longitude to a number
@@ -339,12 +372,12 @@ app.get('/api/resources', async (req, res) => {
   queryParams.push(limit, offset);
 
   // Debugging: Log SQL query and parameters
-  console.log('SQL Query:', sqlQuery);
-  console.log('Query Parameters:', queryParams);
+  // console.log('SQL Query:', sqlQuery);
+  // console.log('Query Parameters:', queryParams);
 
   try {
     const results = await pool.query(sqlQuery, queryParams);
-    console.log('Query Results:', results.rows);
+    // console.log('Query Results:', results.rows);
     res.json(results.rows); // Return the results
   } catch (err) {
     console.error('Error fetching resources:', err);
