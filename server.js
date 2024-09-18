@@ -233,7 +233,10 @@ app.post('/api/refresh-token', (req, res) => {
 
 // Add resource endpoint
 app.post('/api/resources', async (req, res) => {
-  const { name, category, url, image_url, location, description, user_id, phone_number, vacancies = 0, hours } = req.body;
+  const { name, category, url, image_url, location, description, user_id, phone_number, vacancies = 0, hours, lat, lng, place_id } = req.body;
+
+  console.log("lat", lat);
+  console.log("lng", lng);
   
   // Verify Authorization Token
   const token = req.headers['authorization'];
@@ -241,8 +244,8 @@ app.post('/api/resources', async (req, res) => {
   
   try {
     const result = await pool.query(
-      'INSERT INTO moderated_resources (name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *',
-      [name, category, url, image_url, location, description, user_id, phone_number, vacancies, JSON.stringify(hours)]
+      'INSERT INTO moderated_resources (name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours, latitude, longitude, place_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) RETURNING *',
+      [name, category, url, image_url, location, description, user_id, phone_number, vacancies, JSON.stringify(hours), lat, lng, place_id]
     );
     res.json(result.rows[0]); // Return the added resource for moderation
   } catch (err) {
@@ -270,7 +273,7 @@ app.put('/api/resources/:id', async (req, res) => {
 
     const result = await pool.query(
       'UPDATE moderated_resources SET name = $1, category = $2, url = $3, image_url = $4, location = $5, description = $6, phone_number = $7, vacancies = $8, hours = $9 WHERE id = $10 RETURNING *',
-      [name, category, url, image_url, location, description, phone_number, vacancies, hours, id]
+      [name, category, url, image_url, location, description, phone_number, vacancies, JSON.stringify(hours), id, userId] //NEED TO FIX
     );
     if (result.rows.length === 0) {
       return res.status(404).send('Resource not found');
@@ -303,12 +306,12 @@ app.put('/api/moderated-resources/:id/approve', async (req, res) => {
       return res.status(404).send('Resource not found');
     }
 
-    const { name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours} = result.rows[0];
+    const { name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours, latitude, longitude, place_id } = result.rows[0];
 
     // Insert the resource into the resources table, maintaining the same ID
     await pool.query(
-      'INSERT INTO resources (id, name, category, url, image_url, location, description, phone_number, vacancies, hours, user_id, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)',
-      [id, name, category, url, image_url, location, description, phone_number, vacancies, hours, user_id, 'approved']
+      'INSERT INTO resources (id, name, category, url, image_url, location, description, phone_number, vacancies, hours, user_id, status, latitude, longitude, place_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)',
+      [id, name, category, url, image_url, location, description, phone_number, vacancies, JSON.stringify(hours), user_id, 'approved', latitude, longitude, place_id]
     );
 
     // Update moderation status

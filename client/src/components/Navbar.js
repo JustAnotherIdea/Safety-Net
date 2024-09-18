@@ -32,8 +32,9 @@ function Navbar() {
           <>
             <li><Link to="/my-resources">My Resources</Link></li>
             <li><Link to="/add-resource">Add Resource</Link></li>
-            {userRole === 'admin' && <li><Link to="/admin-users">Manage Users</Link></li>}  {/* Visible only to admins */}
-            {userRole === 'moderator' && <li><Link to="/admin-moderation">Moderate Resources</Link></li>}  {/* Visible only to moderators */}
+            {userRole === 'admin' && <li><Link to="/admin-users">Manage Users</Link></li>}
+            {userRole === 'admin' && <li><Link to="/admin-moderation">Moderate Resources</Link></li>}
+            {userRole === 'moderator' && <li><Link to="/admin-moderation">Moderate Resources</Link></li>}
             <li><button onClick={handleLogout}>Logout</button></li>
           </>
         ) : (

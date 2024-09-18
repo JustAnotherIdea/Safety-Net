@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import OpeningHours from './OpeningHours';
 
 function ResourceDetail() {
   const { id } = useParams(); // Get resource ID from URL
@@ -81,11 +82,17 @@ function ResourceDetail() {
     <div>
       {resource ? (
         <div>
+          <img src={resource.image_url} alt={resource.name} />
           <h2>{resource.name}</h2>
           <p>Category: {resource.category}</p>
           <p>Location: {resource.location}</p>
           <p>Description: {resource.description}</p>
-
+          {resource.phone_number && <p>Phone Number: {resource.phone_number}</p>}
+          {resource.vacancies && <p>Vacancies: {resource.vacancies}</p>}
+          {resource.hours && <OpeningHours periods={resource.hours} />}
+          {resource.url && <p>URL: <a href={resource.url} target="_blank" rel="noopener noreferrer">{resource.url}</a></p>}
+          {resource.email && <p>Email: {resource.email}</p>}
+          {resource.rating && <p>Rating: {resource.rating}</p>}
           {localStorage.getItem('token') && // Only show if logged in
             <>
               <button onClick={handleEditClick}>Edit</button>
