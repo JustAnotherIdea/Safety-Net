@@ -51,50 +51,104 @@ pool.connect((err) => {
   }
 });
 
-// Image upload endpoint
-app.post('/api/upload', upload.single('file'), async (req, res) => {
-  const { fileNameReq, fileTypeReq } = req.body;
+// Search endpoint
+app.get('/api/resources', async (req, res) => {
+  const { query, category, page = 1, limit = 10, latitude, longitude, maxDistance } = req.query;
 
-  // console.log("request", req);
+  const radius = Number(maxDistance) || 50;  // Default max distance is 50 miles
+  const searchQuery = query ? `%%${query}%%` : '%%';  // Escape the query for SQL injection
+  const queryParams = [];
+  let paramIndex = 1;  // Initialize parameter index
 
-  if (!req.file) {
-    return res.status(400).send('No file uploaded.');
+  // console.log(latitude, longitude, maxDistance);
+
+  const latitudeNum = Number(latitude);  // Cast latitude to a number
+  const longitudeNum = Number(longitude);  // Cast longitude to a number
+
+  let sqlQuery = `SELECT *`;
+
+  // If latitude and longitude are provided, calculate distance in miles
+  if (latitudeNum && longitudeNum) {
+    sqlQuery += `, (earth_distance(ll_to_earth($${paramIndex}, $${paramIndex + 1}), ll_to_earth(latitude, longitude)) / 1609.34) AS distance_miles`;
+    queryParams.push(latitudeNum, longitudeNum);  // Push as numbers
+    paramIndex += 2;  // Increment the index by 2 for latitude and longitude
   }
 
-  const MAX_SIZE = 5 * 1024 * 1024; // 5MB limit
-  const file = req.file; // The uploaded file information
-  const fileType = file.mimetype;
-  const fileName = file.originalname;
-  const validFileSize = file.size; // File size in bytes
+  sqlQuery += ` FROM resources WHERE (name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
+  queryParams.push(searchQuery);
+  paramIndex++;  // Increment after adding search query
 
-  // console.log('File received:', file); // For debugging
-
-  // console.log("file type", fileType);
-  // Check if file type matches and size is within the limit
-  if (fileType && fileType.match(/image\/(jpeg|jpg|png|gif)/)) {
-    if (validFileSize > MAX_SIZE) {
-      return res.status(400).send('File size exceeds the allowed limit of 5MB.');
-    }
-  } else {
-    return res.status(400).send('Invalid file type.');
+  // If latitude and longitude are provided, add distance filtering
+  if (latitudeNum && longitudeNum) {
+    sqlQuery += ` AND earth_box(ll_to_earth($${paramIndex - 3}, $${paramIndex - 2}), $${paramIndex} * 1609.34) @> ll_to_earth(latitude, longitude)
+                  AND earth_distance(ll_to_earth($${paramIndex - 3}, $${paramIndex - 2}), ll_to_earth(latitude, longitude)) <= $${paramIndex} * 1609.34`;
+    queryParams.push(radius);
+    paramIndex++;  // Increment after adding radius
   }
 
-  const s3Params = {
-    Bucket: 'safety-net-images', // Replace with your bucket name
-    Key: fileNameReq, // File name you want to save as
-    Expires: 60, // Time in seconds for the signed URL to remain valid
-    ContentType: fileTypeReq, // The content type of the file
-    ACL: 'public-read' // Makes the uploaded file publicly readable
-  };
+  // If category is provided, add it as a filter
+  if (category && category !== '') {
+    sqlQuery += ` AND category = $${paramIndex}`;
+    queryParams.push(category);
+    paramIndex++;  // Increment after adding category
+  }
 
-  // Create a signed URL for uploading
-  s3.getSignedUrl('putObject', s3Params, (err, url) => {
-    if (err) {
-      console.error('Error getting signed URL:', err);
-      return res.status(500).send('Error getting signed URL');
+  if (latitudeNum && longitudeNum) {
+    sqlQuery += ` ORDER BY distance_miles`;
+  }
+
+  // Add pagination and ordering by distance
+  const offset = (page - 1) * limit;
+  sqlQuery += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+  queryParams.push(limit, offset);
+
+  // Debugging: Log SQL query and parameters
+  // console.log('SQL Query:', sqlQuery);
+  // console.log('Query Parameters:', queryParams);
+
+  try {
+    const results = await pool.query(sqlQuery, queryParams);
+    // console.log('Query Results:', results.rows);
+    res.json(results.rows); // Return the results
+  } catch (err) {
+    console.error('Error fetching resources:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Get resource by ID
+app.get('/api/resources/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    let result = await pool.query('SELECT * FROM resources WHERE id = $1', [id]);
+    if (result.rows.length === 0) {
+      result = await pool.query('SELECT * FROM moderated_resources WHERE id = $1', [id]);
     }
-    res.json({ url }); // Send the signed URL back to the client
-  });
+    if (result.rows.length === 0) {
+      return res.status(404).send('Resource not found');
+    }
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error fetching resource:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Get resources for the logged-in user
+app.get('/api/user/resources', async (req, res) => {
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+    const results = await pool.query(`SELECT * FROM moderated_resources WHERE user_id = $1 AND status != 'approved'
+      UNION SELECT * FROM resources WHERE user_id = $1`, [userId]);
+    res.json(results.rows);
+  } catch (err) {
+    console.error('Error fetching user resources:', err);
+    res.status(400).send('Invalid token');
+  }
 });
 
 // Place autocomplete endpoint
@@ -119,6 +173,7 @@ app.get('/api/places/autocomplete', async (req, res) => {
   });
 });
 
+// Place details endpoint
 app.get('/api/places/location', async (req, res) => {
   const { place_id } = req.query;
 
@@ -285,6 +340,75 @@ app.put('/api/resources/:id', async (req, res) => {
   }
 });
 
+// Image upload endpoint
+app.post('/api/upload', upload.single('file'), async (req, res) => {
+  const { fileNameReq, fileTypeReq } = req.body;
+
+  // console.log("request", req);
+
+  if (!req.file) {
+    return res.status(400).send('No file uploaded.');
+  }
+
+  const MAX_SIZE = 5 * 1024 * 1024; // 5MB limit
+  const file = req.file; // The uploaded file information
+  const fileType = file.mimetype;
+  const fileName = file.originalname;
+  const validFileSize = file.size; // File size in bytes
+
+  // console.log('File received:', file); // For debugging
+
+  // console.log("file type", fileType);
+  // Check if file type matches and size is within the limit
+  if (fileType && fileType.match(/image\/(jpeg|jpg|png|gif)/)) {
+    if (validFileSize > MAX_SIZE) {
+      return res.status(400).send('File size exceeds the allowed limit of 5MB.');
+    }
+  } else {
+    return res.status(400).send('Invalid file type.');
+  }
+
+  const s3Params = {
+    Bucket: 'safety-net-images', // Replace with your bucket name
+    Key: fileNameReq, // File name you want to save as
+    Expires: 60, // Time in seconds for the signed URL to remain valid
+    ContentType: fileTypeReq, // The content type of the file
+    ACL: 'public-read' // Makes the uploaded file publicly readable
+  };
+
+  // Create a signed URL for uploading
+  s3.getSignedUrl('putObject', s3Params, (err, url) => {
+    if (err) {
+      console.error('Error getting signed URL:', err);
+      return res.status(500).send('Error getting signed URL');
+    }
+    res.json({ url }); // Send the signed URL back to the client
+  });
+});
+
+// Get all moderated resources
+app.get('/api/moderated-resources', async (req, res) => {
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+
+    // Check user's role
+    const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length === 0 || !['admin', 'moderator'].includes(userResult.rows[0].role)) {
+      return res.status(403).send('You are not a moderator'); // Forbidden
+    }
+
+    const results = await pool.query(`SELECT * FROM moderated_resources WHERE status = 'pending'`);
+    res.json(results.rows); // Return all moderated resources
+  } catch (err) {
+    console.error('Error fetching moderated resources:', err);
+    res.status(500).send('Server error');
+  }
+});
+
 // Approve resource endpoint
 app.put('/api/moderated-resources/:id/approve', async (req, res) => {
   const { id } = req.params;
@@ -324,94 +448,6 @@ app.put('/api/moderated-resources/:id/approve', async (req, res) => {
   }
 });
 
-app.get('/api/resources', async (req, res) => {
-  const { query, category, page = 1, limit = 10, latitude, longitude, maxDistance } = req.query;
-
-  const radius = Number(maxDistance) || 50;  // Default max distance is 50 miles
-  const searchQuery = query ? `%%${query}%%` : '%%';  // Escape the query for SQL injection
-  const queryParams = [];
-  let paramIndex = 1;  // Initialize parameter index
-
-  // console.log(latitude, longitude, maxDistance);
-
-  const latitudeNum = Number(latitude);  // Cast latitude to a number
-  const longitudeNum = Number(longitude);  // Cast longitude to a number
-
-  let sqlQuery = `SELECT *`;
-
-  // If latitude and longitude are provided, calculate distance in miles
-  if (latitudeNum && longitudeNum) {
-    sqlQuery += `, (earth_distance(ll_to_earth($${paramIndex}, $${paramIndex + 1}), ll_to_earth(latitude, longitude)) / 1609.34) AS distance_miles`;
-    queryParams.push(latitudeNum, longitudeNum);  // Push as numbers
-    paramIndex += 2;  // Increment the index by 2 for latitude and longitude
-  }
-
-  sqlQuery += ` FROM resources WHERE (name ILIKE $${paramIndex} OR description ILIKE $${paramIndex})`;
-  queryParams.push(searchQuery);
-  paramIndex++;  // Increment after adding search query
-
-  // If latitude and longitude are provided, add distance filtering
-  if (latitudeNum && longitudeNum) {
-    sqlQuery += ` AND earth_box(ll_to_earth($${paramIndex - 3}, $${paramIndex - 2}), $${paramIndex} * 1609.34) @> ll_to_earth(latitude, longitude)
-                  AND earth_distance(ll_to_earth($${paramIndex - 3}, $${paramIndex - 2}), ll_to_earth(latitude, longitude)) <= $${paramIndex} * 1609.34`;
-    queryParams.push(radius);
-    paramIndex++;  // Increment after adding radius
-  }
-
-  // If category is provided, add it as a filter
-  if (category && category !== '') {
-    sqlQuery += ` AND category = $${paramIndex}`;
-    queryParams.push(category);
-    paramIndex++;  // Increment after adding category
-  }
-
-  if (latitudeNum && longitudeNum) {
-    sqlQuery += ` ORDER BY distance_miles`;
-  }
-
-  // Add pagination and ordering by distance
-  const offset = (page - 1) * limit;
-  sqlQuery += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-  queryParams.push(limit, offset);
-
-  // Debugging: Log SQL query and parameters
-  // console.log('SQL Query:', sqlQuery);
-  // console.log('Query Parameters:', queryParams);
-
-  try {
-    const results = await pool.query(sqlQuery, queryParams);
-    // console.log('Query Results:', results.rows);
-    res.json(results.rows); // Return the results
-  } catch (err) {
-    console.error('Error fetching resources:', err);
-    res.status(500).send('Server error');
-  }
-});
-
-
-
-
-
-
-
-// Get resource by ID
-app.get('/api/resources/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    let result = await pool.query('SELECT * FROM resources WHERE id = $1', [id]);
-    if (result.rows.length === 0) {
-      result = await pool.query('SELECT * FROM moderated_resources WHERE id = $1', [id]);
-    }
-    if (result.rows.length === 0) {
-      return res.status(404).send('Resource not found');
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error('Error fetching resource:', err);
-    res.status(500).send('Server error');
-  }
-});
-
 // Reject resource endpoint
 app.delete('/api/moderated-resources/:id', async (req, res) => {
   const { id } = req.params;
@@ -432,70 +468,6 @@ app.delete('/api/moderated-resources/:id', async (req, res) => {
     res.sendStatus(204); // No content
   } catch (err) {
     console.error('Error rejecting resource:', err);
-    res.status(500).send('Server error');
-  }
-});
-
-// Get resources for the logged-in user
-app.get('/api/user/resources', async (req, res) => {
-  const token = req.headers['authorization'];
-  if (!token) return res.status(401).send('Access denied');
-
-  try {
-    const verified = jwt.verify(token, SECRET_KEY);
-    const userId = verified.id;
-    const results = await pool.query(`SELECT * FROM moderated_resources WHERE user_id = $1 AND status != 'approved'
-      UNION SELECT * FROM resources WHERE user_id = $1`, [userId]);
-    res.json(results.rows);
-  } catch (err) {
-    console.error('Error fetching user resources:', err);
-    res.status(400).send('Invalid token');
-  }
-});
-
-// Delete resource endpoint
-app.delete('/api/resources/:id', async (req, res) => {
-  const { id } = req.params;
-
-  // Verify Authorization Token
-  const token = req.headers['authorization'];
-  if (!token) return res.status(401).send('Access denied');
-
-  try {
-    const verified = jwt.verify(token, SECRET_KEY);
-    const userId = verified.id;
-    const resourceCheck = await pool.query('SELECT * FROM resources WHERE id = $1 AND user_id = $2', [id, userId]);
-    if (resourceCheck.rows.length === 0) {
-      return res.status(403).send('You are not authorized to delete this resource'); // Forbidden
-    }
-
-    await pool.query('DELETE FROM resources WHERE id = $1', [id]);
-    res.sendStatus(204);
-  } catch (err) {
-    console.error('Error deleting resource:', err);
-    res.status(500).send('Server error');
-  }
-});
-
-// Get all moderated resources
-app.get('/api/moderated-resources', async (req, res) => {
-  const token = req.headers['authorization'];
-  if (!token) return res.status(401).send('Access denied');
-
-  try {
-    const verified = jwt.verify(token, SECRET_KEY);
-    const userId = verified.id;
-
-    // Check user's role
-    const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
-    if (userResult.rows.length === 0 || !['admin', 'moderator'].includes(userResult.rows[0].role)) {
-      return res.status(403).send('You are not a moderator'); // Forbidden
-    }
-
-    const results = await pool.query(`SELECT * FROM moderated_resources WHERE status = 'pending'`);
-    res.json(results.rows); // Return all moderated resources
-  } catch (err) {
-    console.error('Error fetching moderated resources:', err);
     res.status(500).send('Server error');
   }
 });
@@ -546,6 +518,30 @@ app.put('/api/users/:id/role', async (req, res) => {
     res.sendStatus(204); // No content
   } catch (err) {
     console.error('Error changing user role:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Delete resource endpoint
+app.delete('/api/resources/:id', async (req, res) => {
+  const { id } = req.params;
+
+  // Verify Authorization Token
+  const token = req.headers['authorization'];
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+    const resourceCheck = await pool.query('SELECT * FROM resources WHERE id = $1 AND user_id = $2', [id, userId]);
+    if (resourceCheck.rows.length === 0) {
+      return res.status(403).send('You are not authorized to delete this resource'); // Forbidden
+    }
+
+    await pool.query('DELETE FROM resources WHERE id = $1', [id]);
+    res.sendStatus(204);
+  } catch (err) {
+    console.error('Error deleting resource:', err);
     res.status(500).send('Server error');
   }
 });
