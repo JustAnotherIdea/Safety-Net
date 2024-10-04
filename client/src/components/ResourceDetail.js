@@ -28,6 +28,7 @@ function ResourceDetail() {
         const response = await axios.get(`http://localhost:3000/api/resources/${id}`, {
           headers: { Authorization: token }
         });
+        console.log(response);
         setResource(response.data);
         setFormData(response.data); // Initialize form with resource data
       } catch (error) {

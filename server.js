@@ -27,7 +27,7 @@ const googleClient = new Client();
 const googleAPIKey = process.env.GOOGLE_MAPS_API_KEY;
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 const SECRET_KEY = 'your_secret_key';
 const REFRESH_SECRET_KEY = 'your_refresh_secret_key';
 
@@ -128,6 +128,7 @@ app.get('/api/resources/:id', async (req, res) => {
       return res.status(404).send('Resource not found');
     }
     res.json(result.rows[0]);
+    console.log(result.rows[0]);
   } catch (err) {
     console.error('Error fetching resource:', err);
     res.status(500).send('Server error');
@@ -386,7 +387,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
   });
 });
 
-// Get all moderated resources
+// Get all moderated resource ids
 app.get('/api/moderated-resources', async (req, res) => {
   const token = req.headers['authorization'];
   if (!token) return res.status(401).send('Access denied');
@@ -401,7 +402,7 @@ app.get('/api/moderated-resources', async (req, res) => {
       return res.status(403).send('You are not a moderator'); // Forbidden
     }
 
-    const results = await pool.query(`SELECT * FROM moderated_resources WHERE status = 'pending'`);
+    const results = await pool.query(`SELECT id FROM moderated_resources WHERE status = 'pending'`);
     res.json(results.rows); // Return all moderated resources
   } catch (err) {
     console.error('Error fetching moderated resources:', err);

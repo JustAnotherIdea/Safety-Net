@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './Search.css';
-import { Link } from 'react-router-dom';
+import ResourceCard from './ResourceCard.js';
 
 function Search() {
   const storedPlaceId = localStorage.getItem('place_id');
@@ -21,21 +20,31 @@ function Search() {
   const [loading, setLoading] = useState(false);
   const [places, setPlaces] = useState([]);
   const categories = ['Food', 'Housing', 'Health', 'Education']; 
+
+  // Fetch resources from the API
   const fetchResources = async () => {
     if (loading) return; // Avoid fetching if already loading
     setLoading(true);
     try {
-      console.log("Getting resources");
       const response = await axios.get(`http://localhost:3000/api/resources`, {
         params: { query, category: selectedCategory, page: currentPage, limit: 10, latitude: lat, longitude: lng, maxDistance: maxDistance }
       });
-      console.log( query, selectedCategory, currentPage, lat, lng, maxDistance );
+  
       // Check and only append new unique resources
       setResources(prevResources => {
         const newResources = response.data.filter(res =>
           !prevResources.some(existingRes => existingRes.id === res.id)
         );
-        return [...prevResources, ...newResources];
+        
+        // Combine previous and new resources
+        const combinedResources = [...prevResources, ...newResources];
+        
+        // If combined length exceeds 16, remove the older resources
+        if (combinedResources.length > 16) {
+          return combinedResources.slice(combinedResources.length - 16);
+        }
+  
+        return combinedResources;
       });
     } catch (error) {
       console.error('Error fetching resources:', error);
@@ -43,6 +52,7 @@ function Search() {
       setLoading(false);
     }
   };
+  
 
   let typingTimer; // Declare a timer variable outside the function
   const typingDelay = 500; // Delay in milliseconds (adjust as needed)
@@ -70,13 +80,11 @@ function Search() {
       const response = await axios.get(`http://localhost:3000/api/places/location`, {
         params: { place_id: placeId }
       });
-      console.log(response);
       const details = {
         address: response.data.address,
         lat: response.data.lat,
         lng: response.data.lng
       };
-      console.log("Setting lat and lng", details.lat, details.lng);
       setLat(details.lat);
       setLng(details.lng);
       localStorage.setItem('lat', details.lat);
@@ -84,12 +92,12 @@ function Search() {
       lastPlaceId = placeId;
     }
   }
+
   const handleSearch = () => {
-    console.log("searching");
-    setCurrentPage(1); 
-    setResources([]); // Reset resources for new search
+    setCurrentPage(1);
     fetchResources(); // Fetch resources with the current page
   };
+
   // Scroll detection logic
   useEffect(() => {
     const handleScroll = () => {
@@ -103,68 +111,99 @@ function Search() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll); // Cleanup
   }, [loading]);
+
   useEffect(() => {
     handleSearch(); // Fetch resources when current page, query, or category change
-  }, [currentPage, query, selectedCategory]);
+  }, [currentPage, query, selectedCategory, lat, lng, maxDistance]);
+
   useEffect(() => {
     if (placeId !== lastPlaceId) {
       getLocation();
     }
   }, [placeId]);
+
   return (
-    <div className="search-container">
-      <h1>Search for Resources</h1>
-      <input
-        type="text"
-        className="search-input"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Enter search query"
-      />
-      <input
-        type="text"
-        className="location-input"
-        value={address}
-        onChange={handleLocationInputChange}
-        placeholder={address !== '' ? address : 'Enter address'}
-      />
+    <div className="w-full mx-auto p-6">
+      
+      {/* Search Form */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <input
+          type="text"
+          className="p-2 border rounded focus:outline-none focus:border-blue-500"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Enter search query"
+        />
+        <input
+          type="text"
+          className="p-2 border rounded focus:outline-none focus:border-blue-500"
+          value={address}
+          onChange={handleLocationInputChange}
+          placeholder={address !== '' ? address : 'Enter address'}
+        />
+        <input
+          type="number"
+          className="p-2 border rounded focus:outline-none focus:border-blue-500"
+          value={maxDistance}
+          onChange={(e) => setMaxDistance(e.target.value)}
+          placeholder="Max Distance (miles)"
+        />
+      </div>
+
+      {/* Category Selector */}
+      <div className="mb-4">
+        <select
+          value={selectedCategory}
+          onChange={(e) => {
+            setSelectedCategory(e.target.value);
+            setCurrentPage(1); // Reset page when category changes
+            setResources([]); // Reset resources on category change
+          }}
+          className="p-2 border rounded w-full md:w-auto focus:outline-none focus:border-blue-500"
+        >
+          <option value="">All Categories</option>
+          {categories.map(category => (
+            <option key={category} value={category}>{category}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Search Button */}
+      <button
+        onClick={handleSearch}
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition w-full md:w-auto"
+      >
+        Search
+      </button>
+
       {/* Display autocomplete suggestions */}
-      {places.map(place => (
-        <div key={place.place_id} onClick={() => {
-          setPlaceId(place.place_id);
-          setAddress(place.description);
-          localStorage.setItem('address', place.description);
-          console.log("place id", place.place_id);
-        }}>{place.description}</div>
-      ))}
-      <input
-        type="number"
-        className="distance-input"
-        value={maxDistance}
-        onChange={(e) => setMaxDistance(e.target.value)}
-        placeholder="Max Distance (miles)"
-      />
-      <select value={selectedCategory} onChange={(e) => {
-        setSelectedCategory(e.target.value);
-        setCurrentPage(1); // Reset page when category changes
-        setResources([]); // Reset resources on category change
-      }}>
-        <option value="">All Categories</option>
-        {categories.map(category => (
-          <option key={category} value={category}>{category}</option>
-        ))}
-      </select>
-      <button className="search-button" onClick={handleSearch}>Search</button>
-      <div className="results-container">
-        {resources.map(resource => (
-          <div key={resource.id} className="resource-card">
-            <Link to={`/resource/${resource.id}`}>{resource.name}</Link>
-            <p>{resource.description}</p>
+      <div className="my-4">
+        {places.map(place => (
+          <div 
+            key={place.place_id} 
+            onClick={() => {
+              setPlaceId(place.place_id);
+              setAddress(place.description);
+              localStorage.setItem('address', place.description);
+            }}
+            className="p-2 bg-gray-100 border-b hover:bg-gray-200 cursor-pointer"
+          >
+            {place.description}
           </div>
         ))}
       </div>
-      {loading && <p>Loading more resources...</p>} {/* Show loading text */}
+
+      {/* Resource Results */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {resources.map(resource => (
+          <ResourceCard key={resource.id} id={resource.id} />
+        ))}
+      </div>
+
+      {/* Loading State */}
+      {loading && <p className="text-center mt-4 text-gray-600">Loading more resources...</p>}
     </div>
   );
 }
+
 export default Search;
