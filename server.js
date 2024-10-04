@@ -32,7 +32,20 @@ const SECRET_KEY = 'your_secret_key';
 const REFRESH_SECRET_KEY = 'your_refresh_secret_key';
 
 app.use(bodyParser.json());
-app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
+
+const allowList = ['http://localhost:3001', 'http://192.168.0.100:3001', 'http://localhost:3000', 'http://192.168.0.100:3000', 'http://100.96.60.109:3000', 'http://100.96.60.109:3001'];
+const corsOptionsDelegate = (req, callback) => {
+  let corsOptions;
+  if (allowList.indexOf(req.header('Origin')) !== -1) {
+    corsOptions = { origin: req.header('Origin'), credentials: true };
+  } else {
+    corsOptions = { origin: false };
+  }
+  callback(null, corsOptions);
+}
+//app.use(cors({ origin: 'http://localhost:3001', credentials: true }));
+//app.use(cors({ origin: 'http://192.168.0.100:3001', credentials: true }));
+app.use(cors(corsOptionsDelegate));
 app.use(cookieParser());
 
 const pool = new Pool({
@@ -52,7 +65,7 @@ pool.connect((err) => {
 });
 
 // Search endpoint
-app.get('/api/resources', async (req, res) => {
+app.get('/api/resources', cors(corsOptionsDelegate), async (req, res) => {
   const { query, category, page = 1, limit = 10, latitude, longitude, maxDistance } = req.query;
 
   const radius = Number(maxDistance) || 50;  // Default max distance is 50 miles
@@ -64,6 +77,26 @@ app.get('/api/resources', async (req, res) => {
 
   const latitudeNum = Number(latitude);  // Cast latitude to a number
   const longitudeNum = Number(longitude);  // Cast longitude to a number
+
+  if (query && typeof query !== 'string') {
+    return res.status(401).send('Query must be a string');
+  }
+  
+  if (category && typeof category !== 'string') {
+    return res.status(401).send('Category must be a string');
+  }
+  
+  if (isNaN(latitudeNum) || isNaN(longitudeNum)) {
+    return res.status(401).send('Latitude and longitude must be valid numbers');
+  }
+  
+  if (isNaN(radius)) {
+    return res.status(401).send('Max distance must be a valid number');
+  }
+  
+  console.log('Received Query Params:', req.query);
+  console.log('Parsed Values - Lat:', latitudeNum, 'Lng:', longitudeNum, 'MaxDistance:', radius);
+
 
   let sqlQuery = `SELECT *`;
 
@@ -117,7 +150,7 @@ app.get('/api/resources', async (req, res) => {
 });
 
 // Get resource by ID
-app.get('/api/resources/:id', async (req, res) => {
+app.get('/api/resources/:id', cors(corsOptionsDelegate), async (req, res) => {
   const { id } = req.params;
   try {
     let result = await pool.query('SELECT * FROM resources WHERE id = $1', [id]);
@@ -128,7 +161,7 @@ app.get('/api/resources/:id', async (req, res) => {
       return res.status(404).send('Resource not found');
     }
     res.json(result.rows[0]);
-    console.log(result.rows[0]);
+    //console.log(result.rows[0]);
   } catch (err) {
     console.error('Error fetching resource:', err);
     res.status(500).send('Server error');
@@ -136,16 +169,17 @@ app.get('/api/resources/:id', async (req, res) => {
 });
 
 // Get resources for the logged-in user
-app.get('/api/user/resources', async (req, res) => {
+app.get('/api/user/resources', cors(corsOptionsDelegate), async (req, res) => {
   const token = req.headers['authorization'];
   if (!token) return res.status(401).send('Access denied');
 
   try {
     const verified = jwt.verify(token, SECRET_KEY);
     const userId = verified.id;
-    const results = await pool.query(`SELECT * FROM moderated_resources WHERE user_id = $1 AND status != 'approved'
-      UNION SELECT * FROM resources WHERE user_id = $1`, [userId]);
+    const results = await pool.query(`SELECT id FROM moderated_resources WHERE user_id = $1 AND status != 'approved'
+      UNION SELECT id FROM resources WHERE user_id = $1`, [userId]);
     res.json(results.rows);
+    console.log(results.rows);
   } catch (err) {
     console.error('Error fetching user resources:', err);
     res.status(400).send('Invalid token');
@@ -153,7 +187,7 @@ app.get('/api/user/resources', async (req, res) => {
 });
 
 // Place autocomplete endpoint
-app.get('/api/places/autocomplete', async (req, res) => {
+app.get('/api/places/autocomplete', cors(corsOptionsDelegate), async (req, res) => {
   const { input } = req.query;
 
   if (!input) {
@@ -175,7 +209,7 @@ app.get('/api/places/autocomplete', async (req, res) => {
 });
 
 // Place details endpoint
-app.get('/api/places/location', async (req, res) => {
+app.get('/api/places/location', cors(corsOptionsDelegate), async (req, res) => {
   const { place_id } = req.query;
 
   if (!place_id) {
@@ -190,7 +224,7 @@ app.get('/api/places/location', async (req, res) => {
   };
 
   googleClient.placeDetails(args).then(async APIres => {
-    console.log("place details", APIres.data.result);
+    //console.log("place details", APIres.data.result);
     const locationDetails = {
       address: APIres.data.result.formatted_address,
       lat: APIres.data.result.geometry.location.lat,
@@ -220,7 +254,7 @@ app.get('/api/places/location', async (req, res) => {
       try {
         const imageResponse = await axios.get(imageRequestUrl);
         const redirectedUrl = imageResponse.request.res.responseUrl;
-        console.log("redirected url", redirectedUrl);
+        //console.log("redirected url", redirectedUrl);
         res.json({ ...locationDetails, image: redirectedUrl });
       } catch (error) {
         console.error('Error fetching place image:', error);
@@ -236,7 +270,7 @@ app.get('/api/places/location', async (req, res) => {
 });
 
 // User registration
-app.post('/api/register', async (req, res) => {
+app.post('/api/register', cors(corsOptionsDelegate), async (req, res) => {
   const { name, email, password, role = 'user' } = req.body;
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -254,7 +288,7 @@ app.post('/api/register', async (req, res) => {
 });
 
 // User login
-app.post('/api/login', async (req, res) => {
+app.post('/api/login', cors(corsOptionsDelegate), async (req, res) => {
   const { email, password } = req.body;
   try {
     const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
@@ -277,7 +311,7 @@ app.post('/api/login', async (req, res) => {
 });
 
 // Refresh Token endpoint
-app.post('/api/refresh-token', (req, res) => {
+app.post('/api/refresh-token', cors(corsOptionsDelegate), (req, res) => {
   const token = req.cookies.refresh_token;
   if (!token) return res.sendStatus(401); // No token found, unauthorized
   jwt.verify(token, REFRESH_SECRET_KEY, (err, user) => {
@@ -288,14 +322,15 @@ app.post('/api/refresh-token', (req, res) => {
 });
 
 // Add resource endpoint
-app.post('/api/resources', async (req, res) => {
+app.post('/api/resources', cors(corsOptionsDelegate), async (req, res) => {
   const { name, category, url, image_url, location, description, user_id, phone_number, vacancies = 0, hours, lat, lng, place_id } = req.body;
 
-  console.log("lat", lat);
-  console.log("lng", lng);
+  //console.log("lat", lat);
+  //console.log("lng", lng);
   
   // Verify Authorization Token
   const token = req.headers['authorization'];
+  console.log("token", token);
   if (!token) return res.status(401).send('Access denied');
   
   try {
@@ -311,7 +346,7 @@ app.post('/api/resources', async (req, res) => {
 });
 
 // Update resource endpoint
-app.put('/api/resources/:id', async (req, res) => {
+app.put('/api/resources/:id', cors(corsOptionsDelegate), async (req, res) => {
   const { id } = req.params;
   const { name, category, url, image_url, location, description, phone_number, vacancies, hours } = req.body;
 
@@ -342,7 +377,7 @@ app.put('/api/resources/:id', async (req, res) => {
 });
 
 // Image upload endpoint
-app.post('/api/upload', upload.single('file'), async (req, res) => {
+app.post('/api/upload', upload.single('file'), cors(corsOptionsDelegate), async (req, res) => {
   const { fileNameReq, fileTypeReq } = req.body;
 
   // console.log("request", req);
@@ -388,7 +423,7 @@ app.post('/api/upload', upload.single('file'), async (req, res) => {
 });
 
 // Get all moderated resource ids
-app.get('/api/moderated-resources', async (req, res) => {
+app.get('/api/moderated-resources', cors(corsOptionsDelegate), async (req, res) => {
   const token = req.headers['authorization'];
   if (!token) return res.status(401).send('Access denied');
 
@@ -411,7 +446,7 @@ app.get('/api/moderated-resources', async (req, res) => {
 });
 
 // Approve resource endpoint
-app.put('/api/moderated-resources/:id/approve', async (req, res) => {
+app.put('/api/moderated-resources/:id/approve', cors(corsOptionsDelegate), async (req, res) => {
   const { id } = req.params;
   const token = req.headers['authorization'];
   if (!token) return res.status(401).send('Access denied');
@@ -450,7 +485,7 @@ app.put('/api/moderated-resources/:id/approve', async (req, res) => {
 });
 
 // Reject resource endpoint
-app.delete('/api/moderated-resources/:id', async (req, res) => {
+app.delete('/api/moderated-resources/:id', cors(corsOptionsDelegate), async (req, res) => {
   const { id } = req.params;
   const token = req.headers['authorization'];
   if (!token) return res.status(401).send('Access denied');
@@ -474,7 +509,7 @@ app.delete('/api/moderated-resources/:id', async (req, res) => {
 });
 
 // Get all users
-app.get('/api/users', async (req, res) => {
+app.get('/api/users', cors(corsOptionsDelegate), async (req, res) => {
   const token = req.headers['authorization'];
   if (!token) return res.status(401).send('Access denied');
 
@@ -497,7 +532,7 @@ app.get('/api/users', async (req, res) => {
 });
 
 // Change user role endpoint
-app.put('/api/users/:id/role', async (req, res) => {
+app.put('/api/users/:id/role', cors(corsOptionsDelegate), async (req, res) => {
   const { id } = req.params;
   const { newRole } = req.body; // Expecting a new role in the request body
 
@@ -524,7 +559,7 @@ app.put('/api/users/:id/role', async (req, res) => {
 });
 
 // Delete resource endpoint
-app.delete('/api/resources/:id', async (req, res) => {
+app.delete('/api/resources/:id', cors(corsOptionsDelegate), async (req, res) => {
   const { id } = req.params;
 
   // Verify Authorization Token
@@ -532,13 +567,25 @@ app.delete('/api/resources/:id', async (req, res) => {
   if (!token) return res.status(401).send('Access denied');
 
   try {
+    // Verify and decode the JWT
     const verified = jwt.verify(token, SECRET_KEY);
     const userId = verified.id;
+
+    // Check if the current user is an admin
+    const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length > 0 && userResult.rows[0].role === 'admin') {
+      // Admins can delete any resource
+      await pool.query('DELETE FROM resources WHERE id = $1', [id]);
+      return res.sendStatus(204);
+    }
+
+    // If not an admin, check if the user owns the resource
     const resourceCheck = await pool.query('SELECT * FROM resources WHERE id = $1 AND user_id = $2', [id, userId]);
     if (resourceCheck.rows.length === 0) {
       return res.status(403).send('You are not authorized to delete this resource'); // Forbidden
     }
 
+    // User owns the resource, proceed to delete
     await pool.query('DELETE FROM resources WHERE id = $1', [id]);
     res.sendStatus(204);
   } catch (err) {

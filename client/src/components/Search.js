@@ -19,15 +19,24 @@ function Search() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [places, setPlaces] = useState([]);
-  const categories = ['Food', 'Housing', 'Health', 'Education']; 
+  const categories = ['Food', 'Housing', 'Health', 'Education'];
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Fetch resources from the API
   const fetchResources = async () => {
     if (loading) return; // Avoid fetching if already loading
     setLoading(true);
     try {
-      const response = await axios.get(`http://localhost:3000/api/resources`, {
-        params: { query, category: selectedCategory, page: currentPage, limit: 10, latitude: lat, longitude: lng, maxDistance: maxDistance }
+      const response = await axios.get(`http://192.168.0.100:3000/api/resources`, {
+        params: {
+          query,
+          category: selectedCategory,
+          page: currentPage,
+          limit: 10,
+          latitude: Number(lat), // Ensure latitude is a number
+          longitude: Number(lng), // Ensure longitude is a number
+          maxDistance: parseInt(maxDistance, 10) // Ensure maxDistance is a number
+        }
       });
   
       // Check and only append new unique resources
@@ -60,6 +69,7 @@ function Search() {
   const handleLocationInputChange = async (e) => {
     const inputValue = e.target.value;
     setAddress(inputValue);
+    setShowSuggestions(true);
 
     // Clear the previous timer if the user keeps typing
     clearTimeout(typingTimer);
@@ -67,7 +77,7 @@ function Search() {
     // Set a new timer that will wait before making the API call
     typingTimer = setTimeout(async () => {
       if (inputValue) { // Ensure the input is not empty
-        const response = await axios.get(`http://localhost:3000/api/places/autocomplete`, {
+        const response = await axios.get(`http://192.168.0.100:3000/api/places/autocomplete`, {
           params: { input: inputValue }
         });
         setPlaces(response.data);
@@ -75,9 +85,16 @@ function Search() {
     }, typingDelay);
   };
 
+  const handlePlaceClick = (place) => {
+    setPlaceId(place.place_id);
+    setAddress(place.description);
+    localStorage.setItem('address', place.description);
+    setShowSuggestions(false); // Hide suggestions when user selects one
+  };
+
   const getLocation = async () => {
-    if (placeId !== lastPlaceId) {
-      const response = await axios.get(`http://localhost:3000/api/places/location`, {
+    if (placeId !== lastPlaceId && placeId) {
+      const response = await axios.get(`http://192.168.0.100:3000/api/places/location`, {
         params: { place_id: placeId }
       });
       const details = {
@@ -119,6 +136,7 @@ function Search() {
   useEffect(() => {
     if (placeId !== lastPlaceId) {
       getLocation();
+      setResources([]); // Reset resources when placeId changes
     }
   }, [placeId]);
 
@@ -177,21 +195,19 @@ function Search() {
       </button>
 
       {/* Display autocomplete suggestions */}
-      <div className="my-4">
-        {places.map(place => (
-          <div 
-            key={place.place_id} 
-            onClick={() => {
-              setPlaceId(place.place_id);
-              setAddress(place.description);
-              localStorage.setItem('address', place.description);
-            }}
-            className="p-2 bg-gray-100 border-b hover:bg-gray-200 cursor-pointer"
-          >
-            {place.description}
-          </div>
-        ))}
-      </div>
+      {showSuggestions && (
+        <div className="my-4">
+          {places.map(place => (
+            <div 
+              key={place.place_id} 
+              onClick={() => handlePlaceClick(place)}
+              className="p-2 bg-gray-100 border-b hover:bg-gray-200 cursor-pointer"
+            >
+              {place.description}
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Resource Results */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom'; // Import Link for navigation
 import axios from 'axios';
 import OpeningHoursDisplay from './OpeningHoursDisplay';
 
@@ -18,7 +19,7 @@ function ResourceCard({ id }) {
     const fetchResource = async () => {
       try {
         console.log(`Fetching resource with ID: ${id}`);
-        const response = await axios.get(`http://localhost:3000/api/resources/${id}`);
+        const response = await axios.get(`http://192.168.0.100:3000/api/resources/${id}`);
         setResource(response.data);
         setLoading(false);
       } catch (error) {
@@ -45,7 +46,12 @@ function ResourceCard({ id }) {
         <>
           <img className="w-full h-48 object-cover rounded-t-lg" src={resource.image_url} alt={resource.name} />
           <div className="p-4">
-            <h2 className="text-xl font-bold">{resource.name}</h2>
+            {/* Link the header to the resource details page */}
+            <Link to={`/resource/${resource.id}`}>
+              <h2 className="text-xl font-bold text-blue-600 hover:text-blue-800 transition-colors">
+                {resource.name}
+              </h2>
+            </Link>
             <p className="text-gray-700">Category: {resource.category}</p>
             <p className="text-gray-700">Location: {resource.location}</p>
             <p className="text-gray-600 mt-2">{resource.description}</p>
@@ -53,7 +59,7 @@ function ResourceCard({ id }) {
             {resource.phone_number && (
               <p className="text-gray-700 mt-2">Phone Number: {resource.phone_number}</p>
             )}
-            {resource.vacancies && (
+            {(resource.vacancies !== null && resource.vacancies !== undefined) && (
               <p className="text-gray-700 mt-2">Vacancies: {resource.vacancies}</p>
             )}
             {resource.hours && <OpeningHoursDisplay periods={resource.hours} />}

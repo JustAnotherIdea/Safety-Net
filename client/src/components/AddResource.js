@@ -28,6 +28,7 @@ function AddResource() {
   const [lat, setLat] = useState('');
   const [lng, setLng] = useState('');
   const [places, setPlaces] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   let lastPlaceId = placeId;
 
@@ -43,6 +44,7 @@ function AddResource() {
   const handleLocationInputChange = async (e) => {
     const inputValue = e.target.value;
     setAddress(inputValue);
+    setShowSuggestions(true);
 
     // Clear the previous timer if the user keeps typing
     clearTimeout(typingTimer);
@@ -50,7 +52,7 @@ function AddResource() {
     // Set a new timer that will wait before making the API call
     typingTimer = setTimeout(async () => {
       if (inputValue) { // Ensure the input is not empty
-        const response = await axios.get(`http://localhost:3000/api/places/autocomplete`, {
+        const response = await axios.get(`http://192.168.0.100:3000/api/places/autocomplete`, {
           params: { input: inputValue }
         });
         setPlaces(response.data);
@@ -60,7 +62,7 @@ function AddResource() {
 
   const getLocation = async (placeId) => {
     if (placeId !== lastPlaceId) {
-      const response = await axios.get(`http://localhost:3000/api/places/location`, {
+      const response = await axios.get(`http://192.168.0.100:3000/api/places/location`, {
         params: { place_id: placeId }
       });
       console.log(response);
@@ -99,6 +101,13 @@ function AddResource() {
     setImageUrl(URL.createObjectURL(file));
   };
 
+  const handlePlaceClick = (place) => {
+    setPlaceId(place.place_id);
+    setAddress(place.description);
+    setShowSuggestions(false); // Hide suggestions when user selects one
+    getLocation(place.place_id); // Fetch place details
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('token');
@@ -118,7 +127,7 @@ function AddResource() {
         data.append('file', imageFile);
         data.append('fileNameReq', fileName);
         data.append('fileTypeReq', fileType);
-        const uploadURL = await axios.post('http://localhost:3000/api/upload', data, {
+        const uploadURL = await axios.post('http://192.168.0.100:3000/api/upload', data, {
           headers: {
             'Authorization': token,
             'Content-Type': 'multipart/form-data' // Ensure correct content type
@@ -137,7 +146,7 @@ function AddResource() {
     
 
       const userId = JSON.parse(atob(token.split('.')[1])).id;
-      await axios.post('http://localhost:3000/api/resources', {
+      await axios.post('http://192.168.0.100:3000/api/resources', {
         location: address,
         name: name,
         url: url,
@@ -166,89 +175,124 @@ function AddResource() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Add Resource</h2>
-      <img src={imageUrl} alt="Preview" />
+    <form 
+      onSubmit={handleSubmit}
+      className="max-w-4xl mx-auto p-8 bg-white shadow-lg rounded-md"
+    >
+      <h2 className="text-2xl font-bold mb-4">Add Resource</h2>
+
+      {/* Image Preview */}
+      {imageUrl && <img src={imageUrl} alt="Preview" className="w-full h-48 object-cover mb-4 rounded-md"/>}
+      
+      {/* Address Input */}
       <input
         type="text"
-        className="location-input"
+        className="w-full p-2 border rounded mb-4 focus:outline-none focus:border-blue-500"
         value={address}
         onChange={handleLocationInputChange}
-        placeholder={address !== '' ? address : 'Enter address'}
+        placeholder="Enter address"
       />
+
       {/* Display autocomplete suggestions */}
-      {places.map(place => (
-        <div key={place.place_id} onClick={() => {
-          setPlaceId(place.place_id);
-          setAddress(place.description);
-          getLocation(place.place_id);  // Pass the place_id directly
-        }}>
-          {place.description}
+      {showSuggestions && places.length > 0 && (
+        <div className="mb-4">
+          {places.map(place => (
+            <div 
+              key={place.place_id} 
+              onClick={() => handlePlaceClick(place)}
+              className="p-2 bg-gray-100 border-b hover:bg-gray-200 cursor-pointer"
+            >
+              {place.description}
+            </div>
+          ))}
         </div>
-      ))}
-      <input 
-        type="text" 
-        name="name" 
-        value={name} 
-        onChange={(e) => setName(e.target.value)} 
-        placeholder="Resource Name" 
-        required 
-      />
-      <input 
-        type="text" 
-        name="category" 
-        value={category} 
-        onChange={(e) => setCategory(e.target.value)} 
-        placeholder="Category" 
-        required 
-      />
-      <input 
-        type="text" 
-        name="url" 
-        value={url} 
-        onChange={(e) => setUrl(e.target.value)} 
-        placeholder="Resource URL" 
-      />
-      <input 
-        type="file" 
-        onChange={handleImageChange}  
-      />
-      <input 
-        type="text" 
-        name="image_url" 
-        value={imageUrl} 
-        onChange={(e) => {
-          setImageUrl(e.target.value)
-          setImageFile(null);
-        }} 
-        placeholder="Image URL" 
-      />
-      <textarea 
-        name="description" 
-        value={description} 
-        onChange={(e) => setDescription(e.target.value)} 
-        placeholder="Description" 
-        required 
-      />
-      <input 
-        type="text" 
-        name="phone_number" 
-        value={phoneNumber} 
-        onChange={(e) => setPhoneNumber(e.target.value)} 
-        placeholder="Phone Number" 
-      />
-      <input 
-        type="number" 
-        name="vacancies" 
-        value={vacancies} 
-        onChange={(e) => setVacancies(e.target.value)} 
-        placeholder="Vacancies" 
-      />
-      <OpeningHours
-        periods={hours} // Load existing hours for editing
-        setPeriods={setHours} // Update opening hours state
-      />
-      <button type="submit">Add Resource</button>
+      )}
+
+      {/* Form Inputs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input 
+          type="text" 
+          name="name" 
+          value={name} 
+          onChange={(e) => setName(e.target.value)} 
+          placeholder="Resource Name"
+          className="w-full p-2 border rounded mb-4 focus:outline-none focus:border-blue-500"
+          required 
+        />
+        <input 
+          type="text" 
+          name="category" 
+          value={category} 
+          onChange={(e) => setCategory(e.target.value)} 
+          placeholder="Category"
+          className="w-full p-2 border rounded mb-4 focus:outline-none focus:border-blue-500"
+          required 
+        />
+        <input 
+          type="text" 
+          name="url" 
+          value={url} 
+          onChange={(e) => setUrl(e.target.value)} 
+          placeholder="Resource URL"
+          className="w-full p-2 border rounded mb-4 focus:outline-none focus:border-blue-500"
+        />
+        <input 
+          type="file" 
+          onChange={handleImageChange}
+          className="w-full p-2 mb-4"
+        />
+        <input 
+          type="text" 
+          name="image_url" 
+          value={imageUrl} 
+          onChange={(e) => {
+            setImageUrl(e.target.value);
+            setImageFile(null);
+          }} 
+          placeholder="Image URL"
+          className="w-full p-2 border rounded mb-4 focus:outline-none focus:border-blue-500"
+        />
+        <textarea 
+          name="description" 
+          value={description} 
+          onChange={(e) => setDescription(e.target.value)} 
+          placeholder="Description"
+          className="w-full p-2 border rounded mb-4 focus:outline-none focus:border-blue-500"
+          required 
+        />
+        <input 
+          type="text" 
+          name="phone_number" 
+          value={phoneNumber} 
+          onChange={(e) => setPhoneNumber(e.target.value)} 
+          placeholder="Phone Number"
+          className="w-full p-2 border rounded mb-4 focus:outline-none focus:border-blue-500"
+        />
+        <input 
+          type="number" 
+          name="vacancies" 
+          value={vacancies} 
+          onChange={(e) => setVacancies(e.target.value)} 
+          placeholder="Vacancies"
+          className="w-full p-2 border rounded mb-4 focus:outline-none focus:border-blue-500"
+        />
+      </div>
+
+      {/* Opening Hours Component */}
+      <div className="mb-4">
+        <OpeningHours
+          periods={hours}
+          setPeriods={setHours}
+        />
+      </div>
+
+      {/* Submit Button */}
+      <button 
+        type="submit"
+        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition w-full md:w-auto"
+      >
+        Add Resource
+      </button>
     </form>
   );
 }

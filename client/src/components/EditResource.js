@@ -22,7 +22,7 @@ function EditResource() {
     const fetchResource = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://localhost:3000/api/resources/${id}`, {
+        const response = await axios.get(`http://192.168.0.100:3000/api/resources/${id}`, {
           headers: {
             Authorization: token
           }
@@ -46,7 +46,7 @@ function EditResource() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://localhost:3000/api/resources/${id}`, formData, {
+      await axios.put(`http://192.168.0.100:3000/api/resources/${id}`, formData, {
         headers: {
           'Authorization': token
         }

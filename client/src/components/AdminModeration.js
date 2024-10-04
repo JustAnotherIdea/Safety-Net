@@ -4,10 +4,12 @@ import axios from 'axios';
 
 function AdminModeration() {
   const [moderatedResources, setModeratedResources] = useState([]);
+
+  // Fetch moderated resources from API
   const fetchModeratedResources = async () => {
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.get('http://localhost:3000/api/moderated-resources', {
+      const response = await axios.get('http://192.168.0.100:3000/api/moderated-resources', {
         headers: { Authorization: token }
       });
       setModeratedResources(response.data);
@@ -16,10 +18,11 @@ function AdminModeration() {
     }
   };
 
+  // Approve a resource
   const approveResource = async (id) => {
     const token = localStorage.getItem('token');
     try {
-      await axios.put(`http://localhost:3000/api/moderated-resources/${id}/approve`, {}, {
+      await axios.put(`http://192.168.0.100:3000/api/moderated-resources/${id}/approve`, {}, {
         headers: { Authorization: token }
       });
       fetchModeratedResources(); // Refresh the list after approval
@@ -28,10 +31,11 @@ function AdminModeration() {
     }
   };
 
+  // Reject a resource
   const rejectResource = async (id) => {
     const token = localStorage.getItem('token');
     try {
-      await axios.delete(`http://localhost:3000/api/moderated-resources/${id}`, {
+      await axios.delete(`http://192.168.0.100:3000/api/moderated-resources/${id}`, {
         headers: { Authorization: token }
       });
       fetchModeratedResources(); // Refresh the list after rejection
@@ -45,17 +49,40 @@ function AdminModeration() {
   }, []);
 
   return (
-    <div>
-      <h1>Moderate Resources</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div className="max-w-6xl mx-auto p-8">
+      {/* Page Header */}
+      <h1 className="text-3xl font-bold text-center mb-8">Moderate Resources</h1>
+
+      {/* Resources Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {moderatedResources.map(resource => (
-          <li key={resource.id}>
+          <div key={resource.id} className="bg-white shadow-md rounded-lg p-4">
+            {/* Resource Card */}
             <ResourceCard id={resource.id} />
-            <button onClick={() => approveResource(resource.id)}>Approve</button>
-            <button onClick={() => rejectResource(resource.id)}>Reject</button>
-          </li>
+
+            {/* Action Buttons */}
+            <div className="mt-4 flex justify-between">
+              <button
+                onClick={() => approveResource(resource.id)}
+                className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition"
+              >
+                Approve
+              </button>
+              <button
+                onClick={() => rejectResource(resource.id)}
+                className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition"
+              >
+                Reject
+              </button>
+            </div>
+          </div>
         ))}
       </div>
+
+      {/* No Resources Message */}
+      {moderatedResources.length === 0 && (
+        <p className="text-center text-gray-600 mt-8">No resources awaiting moderation.</p>
+      )}
     </div>
   );
 }

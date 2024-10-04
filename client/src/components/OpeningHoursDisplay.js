@@ -19,18 +19,21 @@ function OpeningHoursDisplay({ periods }) {
     };
 
     return (
-        <div>
-            <h3>Opening Hours</h3>
+        <div className="bg-gray-50 p-4 rounded-lg shadow-md">
+            <h3 className="text-lg font-bold mb-3 text-gray-800">Opening Hours</h3>
             {periods.length > 0 ? (
-                <ul>
+                <ul className="space-y-2">
                     {periods.map((period, index) => (
-                        <li key={index}>
-                            {getDayName(period.open.day)}: {convertTimeTo12Hour(period.open.time)} to {convertTimeTo12Hour(period.close.time)} 
+                        <li key={index} className="flex justify-between text-gray-700">
+                            <span className="font-medium">{getDayName(period.open.day)}</span>
+                            <span>
+                                {convertTimeTo12Hour(period.open.time)} - {convertTimeTo12Hour(period.close.time)}
+                            </span>
                         </li>
                     ))}
                 </ul>
             ) : (
-                <p>No opening hours available.</p>
+                <p className="text-gray-600">No opening hours available.</p>
             )}
         </div>
     );

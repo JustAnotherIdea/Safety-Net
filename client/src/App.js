@@ -9,6 +9,7 @@ import Volunteer from './components/Volunteer';
 import Contact from './components/Contact';
 import Login from './components/Login';
 import Register from './components/Register';
+import Account from './components/Account';
 import Navbar from './components/Navbar';
 import Protected from './components/Protected';
 import AddResource from './components/AddResource';
@@ -26,14 +27,14 @@ function App() {
         <Navbar />
         <ToastContainer /> {/* Add ToastContainer here */}
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/search" element={<Search />} />
+          <Route path="/" element={<Search />} />
           <Route path="/contribute" element={<Contribute />} />
           <Route path="/donate" element={<Donate />} />
           <Route path="/volunteer" element={<Volunteer />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/account" element={<Account />} />
           <Route path="/my-resources" element={<MyResources />} />
           <Route path="/add-resource" element={<AddResource />} />
           <Route path="/resource/:id" element={<ResourceDetail />} />

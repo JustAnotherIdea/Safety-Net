@@ -25,7 +25,7 @@ function Navbar() {
       <div className="container mx-auto flex justify-between items-center">
         {/* Branding or Logo */}
         <div className="text-white text-2xl font-bold">
-          <Link to="/">Brand</Link>
+          <Link to="/">Safety.net</Link>
         </div>
         
         {/* Hamburger Button for Mobile */}
@@ -64,16 +64,11 @@ function Navbar() {
             isMenuOpen ? 'block' : 'hidden'
           }`}
         >
-          <li><Link to="/" className="block px-2 py-1 hover:text-gray-300">Home</Link></li>
-          <li><Link to="/search" className="block px-2 py-1 hover:text-gray-300">Search</Link></li>
           <li><Link to="/contribute" className="block px-2 py-1 hover:text-gray-300">Contribute</Link></li>
-          <li><Link to="/donate" className="block px-2 py-1 hover:text-gray-300">Donate</Link></li>
-          <li><Link to="/volunteer" className="block px-2 py-1 hover:text-gray-300">Volunteer</Link></li>
           <li><Link to="/contact" className="block px-2 py-1 hover:text-gray-300">Contact</Link></li>
           {isAuthenticated ? (
             <>
-              <li><Link to="/my-resources" className="block px-2 py-1 hover:text-gray-300">My Resources</Link></li>
-              <li><Link to="/add-resource" className="block px-2 py-1 hover:text-gray-300">Add Resource</Link></li>
+              <li><Link to="/account" className="block px-2 py-1 hover:text-gray-300">Account</Link></li>
               {userRole === 'admin' && <li><Link to="/admin-users" className="block px-2 py-1 hover:text-gray-300">Manage Users</Link></li>}
               {userRole === 'admin' && <li><Link to="/admin-moderation" className="block px-2 py-1 hover:text-gray-300">Moderate Resources</Link></li>}
               {userRole === 'moderator' && <li><Link to="/admin-moderation" className="block px-2 py-1 hover:text-gray-300">Moderate Resources</Link></li>}

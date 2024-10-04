@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
+import ResourceCard from './ResourceCard';
 
 function MyResources() {
   const [resources, setResources] = useState([]);
@@ -8,7 +8,7 @@ function MyResources() {
   const fetchResources = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://localhost:3000/api/user/resources', {
+      const response = await axios.get('http://192.168.0.100:3000/api/user/resources', {
         headers: { Authorization: token }
       });
       setResources(response.data);
@@ -22,18 +22,20 @@ function MyResources() {
   }, []);
 
   return (
-    <div>
-      <h1>My Resources</h1>
+    <div className="max-w-6xl mx-auto p-8">
+      
+      {/* Page Header */}
+      <h1 className="text-3xl font-bold text-center mb-8">My Resources</h1>
+
+      {/* Display Message if No Resources */}
       {resources.length === 0 ? (
-        <p>No resources found.</p>
+        <p className="text-center text-gray-600">No resources found.</p>
       ) : (
-        <ul>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {resources.map(resource => (
-            <li key={resource.id}>
-              <Link to={`/resource/${resource.id}`}>{resource.name}</Link> {/* Link to Resource Detail */}
-            </li>
+            <ResourceCard key={resource.id} id={resource.id} />
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );

@@ -20,7 +20,7 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://localhost:3000/api/register', formData);
+      const response = await axios.post('http://192.168.0.100:3000/api/register', formData);
       const token = response.data.token;
       localStorage.setItem('token', token);
       navigate('/');
