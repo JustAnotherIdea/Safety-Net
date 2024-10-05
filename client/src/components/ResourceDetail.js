@@ -108,7 +108,9 @@ function ResourceDetail() {
           <p className="text-gray-600 mb-4">{resource.description}</p>
 
           {resource.phone_number && <p className="text-gray-700 mb-2">Phone Number: {resource.phone_number}</p>}
-          {resource.vacancies && <p className="text-gray-700 mb-2">Vacancies: {resource.vacancies}</p>}
+          {(resource.vacancies !== null && resource.vacancies !== undefined) && (
+            <p className="text-gray-700 mt-2">Vacancies: {resource.vacancies}</p>
+          )}
           {resource.hours && <OpeningHoursDisplay periods={resource.hours} />}
           {resource.url && (
             <p className="mb-2">
