@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import OpeningHoursDisplay from './OpeningHoursDisplay';
+import baseUrl from '../getBaseUrl';
 
 function ResourceDetail() {
   const { id } = useParams(); // Get resource ID from URL
@@ -36,7 +37,7 @@ function ResourceDetail() {
         }
 
         // Fetch resource data
-        const response = await axios.get(`http://192.168.0.100:3000/api/resources/${id}`, {
+        const response = await axios.get(`http://${baseUrl}:3000/api/resources/${id}`, {
           headers: { Authorization: token ? token : '' },
         });
         setResource(response.data);
@@ -60,7 +61,7 @@ function ResourceDetail() {
     e.preventDefault();
     const token = localStorage.getItem('token');
     try {
-      await axios.put(`http://192.168.0.100:3000/api/resources/${id}`, formData, {
+      await axios.put(`http://${baseUrl}:3000/api/resources/${id}`, formData, {
         headers: { Authorization: token }
       });
       console.log('Resource updated successfully!');
@@ -75,7 +76,7 @@ function ResourceDetail() {
     const token = localStorage.getItem('token');
     if (window.confirm('Are you sure you want to delete this resource?')) {
       try {
-        await axios.delete(`http://192.168.0.100:3000/api/resources/${id}`, {
+        await axios.delete(`http://${baseUrl}:3000/api/resources/${id}`, {
           headers: { Authorization: token }
         });
         console.log('Resource deleted successfully!');

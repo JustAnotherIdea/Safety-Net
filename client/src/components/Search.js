@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ResourceCard from './ResourceCard.js';
+import baseUrl from '../getBaseUrl.js';
 
 function Search() {
   const storedPlaceId = localStorage.getItem('place_id');
@@ -27,7 +28,7 @@ function Search() {
     if (loading) return; // Avoid fetching if already loading
     setLoading(true);
     try {
-      const response = await axios.get(`http://192.168.0.100:3000/api/resources`, {
+      const response = await axios.get(`http://${baseUrl}:3000/api/resources`, {
         params: {
           query,
           category: selectedCategory,
@@ -69,6 +70,10 @@ function Search() {
   const handleLocationInputChange = async (e) => {
     const inputValue = e.target.value;
     setAddress(inputValue);
+    if (!inputValue) {
+      setShowSuggestions(false);
+      return;
+    }
     setShowSuggestions(true);
 
     // Clear the previous timer if the user keeps typing
@@ -77,7 +82,7 @@ function Search() {
     // Set a new timer that will wait before making the API call
     typingTimer = setTimeout(async () => {
       if (inputValue) { // Ensure the input is not empty
-        const response = await axios.get(`http://192.168.0.100:3000/api/places/autocomplete`, {
+        const response = await axios.get(`http://${baseUrl}:3000/api/places/autocomplete`, {
           params: { input: inputValue }
         });
         setPlaces(response.data);
@@ -94,7 +99,7 @@ function Search() {
 
   const getLocation = async () => {
     if (placeId !== lastPlaceId && placeId) {
-      const response = await axios.get(`http://192.168.0.100:3000/api/places/location`, {
+      const response = await axios.get(`http://${baseUrl}:3000/api/places/location`, {
         params: { place_id: placeId }
       });
       const details = {

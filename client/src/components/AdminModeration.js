@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import ResourceCard from './ResourceCard';
 import axios from 'axios';
+import baseUrl from '../getBaseUrl';
 
 function AdminModeration() {
   const [moderatedResources, setModeratedResources] = useState([]);
@@ -9,8 +10,8 @@ function AdminModeration() {
   const fetchModeratedResources = async () => {
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.get('http://192.168.0.100:3000/api/moderated-resources', {
-        headers: { Authorization: token }
+      const response = await axios.get(`http://${baseUrl}:3000/api/moderated-resources`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       setModeratedResources(response.data);
     } catch (error) {
@@ -22,7 +23,7 @@ function AdminModeration() {
   const approveResource = async (id) => {
     const token = localStorage.getItem('token');
     try {
-      await axios.put(`http://192.168.0.100:3000/api/moderated-resources/${id}/approve`, {}, {
+      await axios.put(`http://${baseUrl}:3000/api/moderated-resources/${id}/approve`, {}, {
         headers: { Authorization: token }
       });
       fetchModeratedResources(); // Refresh the list after approval
@@ -35,7 +36,7 @@ function AdminModeration() {
   const rejectResource = async (id) => {
     const token = localStorage.getItem('token');
     try {
-      await axios.delete(`http://192.168.0.100:3000/api/moderated-resources/${id}`, {
+      await axios.delete(`http://${baseUrl}:3000/api/moderated-resources/${id}`, {
         headers: { Authorization: token }
       });
       fetchModeratedResources(); // Refresh the list after rejection

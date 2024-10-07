@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import OpeningHours from './OpeningHours';
+import baseUrl from '../getBaseUrl';
 
 function AddResource() {
   // const [formData, setFormData] = useState({
@@ -52,7 +53,7 @@ function AddResource() {
     // Set a new timer that will wait before making the API call
     typingTimer = setTimeout(async () => {
       if (inputValue) { // Ensure the input is not empty
-        const response = await axios.get(`http://192.168.0.100:3000/api/places/autocomplete`, {
+        const response = await axios.get(`http://${baseUrl}:3000/api/places/autocomplete`, {
           params: { input: inputValue }
         });
         setPlaces(response.data);
@@ -62,7 +63,7 @@ function AddResource() {
 
   const getLocation = async (placeId) => {
     if (placeId !== lastPlaceId) {
-      const response = await axios.get(`http://192.168.0.100:3000/api/places/location`, {
+      const response = await axios.get(`http://${baseUrl}:3000/api/places/location`, {
         params: { place_id: placeId }
       });
       console.log(response);
@@ -127,7 +128,7 @@ function AddResource() {
         data.append('file', imageFile);
         data.append('fileNameReq', fileName);
         data.append('fileTypeReq', fileType);
-        const uploadURL = await axios.post('http://192.168.0.100:3000/api/upload', data, {
+        const uploadURL = await axios.post(`http://${baseUrl}:3000/api/upload`, data, {
           headers: {
             'Authorization': token,
             'Content-Type': 'multipart/form-data' // Ensure correct content type
@@ -146,7 +147,7 @@ function AddResource() {
     
 
       const userId = JSON.parse(atob(token.split('.')[1])).id;
-      await axios.post('http://192.168.0.100:3000/api/resources', {
+      await axios.post(`http://${baseUrl}:3000/api/resources`, {
         location: address,
         name: name,
         url: url,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
+import baseUrl from '../getBaseUrl';
 
 function EditResource() {
   const { id } = useParams(); // Get resource ID from route
@@ -22,7 +23,7 @@ function EditResource() {
     const fetchResource = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get(`http://192.168.0.100:3000/api/resources/${id}`, {
+        const response = await axios.get(`http://${baseUrl}:3000/api/resources/${id}`, {
           headers: {
             Authorization: token
           }
@@ -46,7 +47,7 @@ function EditResource() {
     e.preventDefault();
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`http://192.168.0.100:3000/api/resources/${id}`, formData, {
+      await axios.put(`http://${baseUrl}:3000/api/resources/${id}`, formData, {
         headers: {
           'Authorization': token
         }

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ResourceCard from './ResourceCard';
+import baseUrl from '../getBaseUrl';
 
 function MyResources() {
   const [resources, setResources] = useState([]);
@@ -8,7 +9,7 @@ function MyResources() {
   const fetchResources = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get('http://192.168.0.100:3000/api/user/resources', {
+      const response = await axios.get(`http://${baseUrl}:3000/api/user/resources`, {
         headers: { Authorization: token }
       });
       setResources(response.data);

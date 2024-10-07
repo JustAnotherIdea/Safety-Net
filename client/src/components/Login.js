@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import baseUrl from '../getBaseUrl';
 
 function Login() {
   const navigate = useNavigate();
@@ -24,15 +25,27 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://192.168.0.100:3000/api/login', formData, { withCredentials: true });
+      const response = await axios.post(
+        `http://${baseUrl}:3000/api/login`,
+        { ...formData, rememberMe } // Include rememberMe in the request body
+      );
       console.log('User logged in:', response.data);
       localStorage.setItem('token', response.data.token);
 
-      if (rememberMe) {
-        localStorage.setItem('rememberMe', 'true'); // Remember user in localStorage
-      } else {
-        localStorage.removeItem('rememberMe');
-      }
+      // optionally store rememberMe in localStorage
+      // if (rememberMe) {
+      //   localStorage.setItem('rememberMe', 'true'); // Remember user in localStorage
+      // } else {
+      //   localStorage.removeItem('rememberMe');
+      // }
+
+      // Use a small timeout to ensure `localStorage` is properly updated
+      setTimeout(() => {
+        // Emit custom event to notify login
+        window.dispatchEvent(new Event('login'));
+
+        navigate('/');
+      }, 100);
 
       navigate('/');
     } catch (err) {

@@ -1,24 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import baseUrl from '../getBaseUrl';
 
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [token, setToken] = useState(localStorage.getItem('token'));
   const navigate = useNavigate();
-  const isAuthenticated = localStorage.getItem('token') !== null;
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await axios.post(`http://${baseUrl}:3000/api/logout`, {}, { withCredentials: true });
+      localStorage.removeItem('token');
+      document.cookie = 'refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      setToken(null);
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
   };
 
   const getUserRole = () => {
-    const token = localStorage.getItem('token');
     if (!token) return null;
-    const decoded = JSON.parse(atob(token.split('.')[1])); // Decode the JWT to get user info
-    return decoded.role; // Extract role from token
+    try {
+      const decoded = JSON.parse(atob(token.split('.')[1])); // Decode the JWT to get user info
+      console.log("user role", decoded.role);
+      return decoded.role; // Extract role from token
+    } catch (e) {
+      console.error('Invalid token:', e);
+      return null;
+    }
   };
 
   const userRole = getUserRole(); // Get the current user's role
+
+  // Listen for custom 'tokenRefreshed' and 'login' events
+  useEffect(() => {
+    const handleTokenUpdate = () => {
+      setToken(localStorage.getItem('token'));
+    };
+
+    window.addEventListener('tokenRefreshed', handleTokenUpdate);
+    window.addEventListener('login', handleTokenUpdate);
+    
+    return () => {
+      window.removeEventListener('tokenRefreshed', handleTokenUpdate);
+      window.removeEventListener('login', handleTokenUpdate);
+    };
+  }, []);
 
   return (
     <nav className="bg-blue-600 p-4 shadow-lg">
@@ -66,12 +95,13 @@ function Navbar() {
         >
           <li><Link to="/contribute" className="block px-2 py-1 hover:text-gray-300">Contribute</Link></li>
           <li><Link to="/contact" className="block px-2 py-1 hover:text-gray-300">Contact</Link></li>
-          {isAuthenticated ? (
+          {token ? (
             <>
               <li><Link to="/account" className="block px-2 py-1 hover:text-gray-300">Account</Link></li>
               {userRole === 'admin' && <li><Link to="/admin-users" className="block px-2 py-1 hover:text-gray-300">Manage Users</Link></li>}
-              {userRole === 'admin' && <li><Link to="/admin-moderation" className="block px-2 py-1 hover:text-gray-300">Moderate Resources</Link></li>}
-              {userRole === 'moderator' && <li><Link to="/admin-moderation" className="block px-2 py-1 hover:text-gray-300">Moderate Resources</Link></li>}
+              {(userRole === 'admin' || userRole === 'moderator') && (
+                <li><Link to="/admin-moderation" className="block px-2 py-1 hover:text-gray-300">Moderate Resources</Link></li>
+              )}
               <li>
                 <button 
                   onClick={handleLogout} 

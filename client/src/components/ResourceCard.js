@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom'; // Import Link for navigation
 import axios from 'axios';
 import OpeningHoursDisplay from './OpeningHoursDisplay';
+import baseUrl from '../getBaseUrl';
 
 function ResourceCard({ id }) {
   const [resource, setResource] = useState(null);
@@ -19,7 +20,7 @@ function ResourceCard({ id }) {
     const fetchResource = async () => {
       try {
         console.log(`Fetching resource with ID: ${id}`);
-        const response = await axios.get(`http://192.168.0.100:3000/api/resources/${id}`);
+        const response = await axios.get(`http://${baseUrl}:3000/api/resources/${id}`);
         setResource(response.data);
         setLoading(false);
       } catch (error) {

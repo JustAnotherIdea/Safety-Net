@@ -1,3 +1,5 @@
+import './authService';
+
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import useAuth from './hooks/useAuth';

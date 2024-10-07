@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom'; // Use navigate for redirecting
+import baseUrl from '../getBaseUrl';
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -20,7 +21,7 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('http://192.168.0.100:3000/api/register', formData);
+      const response = await axios.post(`http://${baseUrl}:3000/api/register`, formData);
       const token = response.data.token;
       localStorage.setItem('token', token);
       navigate('/');

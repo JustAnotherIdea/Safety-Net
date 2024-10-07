@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import baseUrl from '../getBaseUrl';
 
 function AdminUsers() {
   const [users, setUsers] = useState([]);
@@ -7,7 +8,7 @@ function AdminUsers() {
   const fetchUsers = async () => {
     const token = localStorage.getItem('token');
     try {
-      const response = await axios.get('http://192.168.0.100:3000/api/users', {
+      const response = await axios.get(`http://${baseUrl}:3000/api/users`, {
         headers: { Authorization: token }
       });
       setUsers(response.data);
@@ -23,7 +24,7 @@ function AdminUsers() {
   const handleRoleChange = async (userId, newRole) => {
     const token = localStorage.getItem('token');
     try {
-      await axios.put(`http://192.168.0.100:3000/api/users/${userId}/role`, { newRole }, {
+      await axios.put(`http://${baseUrl}:3000/api/users/${userId}/role`, { newRole }, {
         headers: { Authorization: token }
       });
       fetchUsers(); // Refresh the user list after changing role

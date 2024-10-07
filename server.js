@@ -33,7 +33,7 @@ const REFRESH_SECRET_KEY = 'your_refresh_secret_key';
 
 app.use(bodyParser.json());
 
-const allowList = ['http://localhost:3001', 'http://192.168.0.100:3001', 'http://localhost:3000', 'http://192.168.0.100:3000', 'http://100.96.60.109:3000', 'http://100.96.60.109:3001'];
+const allowList = ['http://localhost:3001', 'http://localhost:3000', 'http://192.168.0.100:3001', 'http://192.168.0.100:3000', 'http://100.96.60.109:3000', 'http://100.96.60.109:3001'];
 const corsOptionsDelegate = (req, callback) => {
   let corsOptions;
   if (allowList.indexOf(req.header('Origin')) !== -1) {
@@ -170,7 +170,7 @@ app.get('/api/resources/:id', cors(corsOptionsDelegate), async (req, res) => {
 
 // Get resources for the logged-in user
 app.get('/api/user/resources', cors(corsOptionsDelegate), async (req, res) => {
-  const token = req.headers['authorization'];
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).send('Access denied');
 
   try {
@@ -179,8 +179,13 @@ app.get('/api/user/resources', cors(corsOptionsDelegate), async (req, res) => {
     const results = await pool.query(`SELECT id FROM moderated_resources WHERE user_id = $1 AND status != 'approved'
       UNION SELECT id FROM resources WHERE user_id = $1`, [userId]);
     res.json(results.rows);
-    console.log(results.rows);
+    //console.log(results.rows);
   } catch (err) {
+    // Handle JWT verification errors (invalid or expired token)
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+    }
+    // Handle any other errors as a server error
     console.error('Error fetching user resources:', err);
     res.status(400).send('Invalid token');
   }
@@ -301,8 +306,11 @@ app.post('/api/login', cors(corsOptionsDelegate), async (req, res) => {
       return res.status(400).send('Invalid credentials');
     }
     const token = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
-    const refreshToken = jwt.sign({ id: user.id }, REFRESH_SECRET_KEY, { expiresIn: '7d' });
-    res.cookie('refresh_token', refreshToken, { httpOnly: true });
+    const refreshToken = jwt.sign({ id: user.id, role: user.role }, REFRESH_SECRET_KEY, { expiresIn: '7d' });
+    const cookie = req.cookies['refresh_token'];
+    console.log("cookie", cookie);
+    console.log("refresh token", refreshToken);
+    res.cookie('refresh_token', refreshToken, { httpOnly: true, sameSite: 'strict', secure: false, maxAge: 7 * 24 * 60 * 60 * 1000 });
     res.json({ token });
   } catch (err) {
     console.error('Error logging in user:', err);
@@ -310,14 +318,23 @@ app.post('/api/login', cors(corsOptionsDelegate), async (req, res) => {
   }
 });
 
+//User logout
+app.post('/api/logout', cors(corsOptionsDelegate), (req, res) => {
+  res.clearCookie('refresh_token');
+  res.sendStatus(204);
+});
+
 // Refresh Token endpoint
 app.post('/api/refresh-token', cors(corsOptionsDelegate), (req, res) => {
   const token = req.cookies.refresh_token;
+  console.log("refresh token", token);
   if (!token) return res.sendStatus(401); // No token found, unauthorized
   jwt.verify(token, REFRESH_SECRET_KEY, (err, user) => {
     if (err) return res.sendStatus(403); // Forbidden
     const newAccessToken = jwt.sign({ id: user.id, role: user.role }, SECRET_KEY, { expiresIn: '1h' });
     res.json({ token: newAccessToken });
+    console.log("user", user);
+    console.log("new access token", newAccessToken);
   });
 });
 
@@ -329,8 +346,8 @@ app.post('/api/resources', cors(corsOptionsDelegate), async (req, res) => {
   //console.log("lng", lng);
   
   // Verify Authorization Token
-  const token = req.headers['authorization'];
-  console.log("token", token);
+  const token = req.headers['authorization']?.split(' ')[1];
+  // console.log("token", token);
   if (!token) return res.status(401).send('Access denied');
   
   try {
@@ -340,6 +357,11 @@ app.post('/api/resources', cors(corsOptionsDelegate), async (req, res) => {
     );
     res.json(result.rows[0]); // Return the added resource for moderation
   } catch (err) {
+    // Handle JWT verification errors (invalid or expired token)
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+    }
+    // Handle any other errors as a server error
     console.error('Error adding resource:', err);
     res.status(500).send('Server error');
   }
@@ -350,7 +372,7 @@ app.put('/api/resources/:id', cors(corsOptionsDelegate), async (req, res) => {
   const { id } = req.params;
   const { name, category, url, image_url, location, description, phone_number, vacancies, hours } = req.body;
 
-  const token = req.headers['authorization'];
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).send('Access denied');
 
   try {
@@ -371,6 +393,11 @@ app.put('/api/resources/:id', cors(corsOptionsDelegate), async (req, res) => {
     }
     res.json(result.rows[0]);
   } catch (err) {
+    // Handle JWT verification errors (invalid or expired token)
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+    }
+    // Handle any other errors as a server error
     console.error('Error updating resource:', err);
     res.status(500).send('Server error');
   }
@@ -424,7 +451,7 @@ app.post('/api/upload', upload.single('file'), cors(corsOptionsDelegate), async 
 
 // Get all moderated resource ids
 app.get('/api/moderated-resources', cors(corsOptionsDelegate), async (req, res) => {
-  const token = req.headers['authorization'];
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).send('Access denied');
 
   try {
@@ -440,6 +467,11 @@ app.get('/api/moderated-resources', cors(corsOptionsDelegate), async (req, res) 
     const results = await pool.query(`SELECT id FROM moderated_resources WHERE status = 'pending'`);
     res.json(results.rows); // Return all moderated resources
   } catch (err) {
+    // Handle JWT verification errors (invalid or expired token)
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+    }
+    // Handle any other errors as a server error
     console.error('Error fetching moderated resources:', err);
     res.status(500).send('Server error');
   }
@@ -448,7 +480,7 @@ app.get('/api/moderated-resources', cors(corsOptionsDelegate), async (req, res) 
 // Approve resource endpoint
 app.put('/api/moderated-resources/:id/approve', cors(corsOptionsDelegate), async (req, res) => {
   const { id } = req.params;
-  const token = req.headers['authorization'];
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).send('Access denied');
 
   try {
@@ -479,6 +511,11 @@ app.put('/api/moderated-resources/:id/approve', cors(corsOptionsDelegate), async
 
     res.sendStatus(204); // No content
   } catch (err) {
+    // Handle JWT verification errors (invalid or expired token)
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+    }
+    // Handle any other errors as a server error
     console.error('Error approving resource:', err);
     res.status(500).send('Server error');
   }
@@ -487,7 +524,7 @@ app.put('/api/moderated-resources/:id/approve', cors(corsOptionsDelegate), async
 // Reject resource endpoint
 app.delete('/api/moderated-resources/:id', cors(corsOptionsDelegate), async (req, res) => {
   const { id } = req.params;
-  const token = req.headers['authorization'];
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).send('Access denied');
 
   try {
@@ -503,6 +540,11 @@ app.delete('/api/moderated-resources/:id', cors(corsOptionsDelegate), async (req
     await pool.query('DELETE FROM moderated_resources WHERE id = $1', [id]);
     res.sendStatus(204); // No content
   } catch (err) {
+    // Handle JWT verification errors (invalid or expired token)
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+    }
+    // Handle any other errors as a server error
     console.error('Error rejecting resource:', err);
     res.status(500).send('Server error');
   }
@@ -510,7 +552,7 @@ app.delete('/api/moderated-resources/:id', cors(corsOptionsDelegate), async (req
 
 // Get all users
 app.get('/api/users', cors(corsOptionsDelegate), async (req, res) => {
-  const token = req.headers['authorization'];
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).send('Access denied');
 
   try {
@@ -526,6 +568,11 @@ app.get('/api/users', cors(corsOptionsDelegate), async (req, res) => {
     const results = await pool.query('SELECT id, name, email, role FROM users'); // Select only relevant
     res.json(results.rows); // Return all users
   } catch (err) {
+    // Handle JWT verification errors (invalid or expired token)
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+    }
+    // Handle any other errors as a server error
     console.error('Error fetching users:', err);
     res.status(500).send('Server error');
   }
@@ -536,7 +583,7 @@ app.put('/api/users/:id/role', cors(corsOptionsDelegate), async (req, res) => {
   const { id } = req.params;
   const { newRole } = req.body; // Expecting a new role in the request body
 
-  const token = req.headers['authorization'];
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).send('Access denied');
 
   try {
@@ -553,6 +600,11 @@ app.put('/api/users/:id/role', cors(corsOptionsDelegate), async (req, res) => {
     await pool.query('UPDATE users SET role = $1 WHERE id = $2', [newRole, id]);
     res.sendStatus(204); // No content
   } catch (err) {
+    // Handle JWT verification errors (invalid or expired token)
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+    }
+    // Handle any other errors as a server error
     console.error('Error changing user role:', err);
     res.status(500).send('Server error');
   }
@@ -563,7 +615,7 @@ app.delete('/api/resources/:id', cors(corsOptionsDelegate), async (req, res) => 
   const { id } = req.params;
 
   // Verify Authorization Token
-  const token = req.headers['authorization'];
+  const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).send('Access denied');
 
   try {
@@ -589,6 +641,11 @@ app.delete('/api/resources/:id', cors(corsOptionsDelegate), async (req, res) => 
     await pool.query('DELETE FROM resources WHERE id = $1', [id]);
     res.sendStatus(204);
   } catch (err) {
+    // Handle JWT verification errors (invalid or expired token)
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+    }
+    // Handle any other errors as a server error
     console.error('Error deleting resource:', err);
     res.status(500).send('Server error');
   }
