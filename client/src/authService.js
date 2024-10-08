@@ -66,6 +66,7 @@ const processQueue = (error, token = null) => {
 axios.interceptors.response.use(
   (response) => response,
   async (error) => {
+    console.log('Error interceptor:', error);
     const originalRequest = error.config;
 
     // If the error status is 401 and it's not a retry attempt

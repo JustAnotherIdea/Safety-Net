@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+
+//update for new refresh token
 function useAuth() {
   const navigate = useNavigate();
 
