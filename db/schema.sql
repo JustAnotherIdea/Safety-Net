@@ -18,11 +18,12 @@ CREATE TABLE resources (
   id SERIAL PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   category VARCHAR(50) NOT NULL,
+  subcategory VARCHAR(50) NOT NULL,
   url VARCHAR(255),
-  image_url VARCHAR(255),
+  image_url TEXT,
   location VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
-  phone_number VARCHAR(15),
+  phone_number VARCHAR(30),
   vacancies INT DEFAULT 0,
   hours JSONB,
   rating DECIMAL(2, 1) DEFAULT 0.0,
@@ -40,11 +41,12 @@ CREATE TABLE moderated_resources (
   id INT DEFAULT nextval('resource_id_seq') PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
   category VARCHAR(50) NOT NULL,
+  subcategory VARCHAR(50) NOT NULL,
   url VARCHAR(255),
-  image_url VARCHAR(255),
+  image_url TEXT,
   location VARCHAR(255) NOT NULL,
   description TEXT NOT NULL,
-  phone_number VARCHAR(15),
+  phone_number VARCHAR(30),
   vacancies INT DEFAULT 0,
   hours JSONB,
   rating DECIMAL(2, 1) DEFAULT 0.0,
@@ -61,8 +63,3 @@ CREATE TABLE moderated_resources (
 INSERT INTO users (name, email, password, role, place_id, latitude, longitude) VALUES
   ('John Doe', 'john@example.com', 'password123', 'user', 'ChIJx1', 37.7749, -122.4194),
   ('Jane Smith', 'jane@example.com', 'password123', 'admin', 'ChIJx1', 37.7749, -122.4194);
-
--- Insert seed data into resources table
-INSERT INTO resources (name, category, url, image_url, location, description, phone_number, vacancies, hours, rating, user_id, place_id, latitude, longitude) VALUES
-  ('Food Bank', 'Food', 'http://example.com/foodbank', 'http://example.com/foodbank.jpg', '123 Main St', 'Provides free food to those in need', '555-1234', 0, '{"periods":[{"open":{"day":1,"time":"0800"},"close":{"day":1,"time":"1600"}},{"open":{"day":2,"time":"0800"},"close":{"day":2,"time":"1600"}}]}', 4.5, 1, 'ChIJx1', 37.7749, -122.4194),
-  ('Homeless Shelter', 'Housing', 'http://example.com/shelter', 'http://example.com/shelter.jpg', '456 Elm St','Provides shelter to homeless individuals', '555-5678', 10, '{"periods":[{"open":{"day":0,"time":"0000"},"close":{"day":0,"time":"0000"}}]}', 4.8, 2, 'ChIJx2', 37.7740, -122.4319);

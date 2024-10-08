@@ -498,12 +498,13 @@ app.put('/api/moderated-resources/:id/approve', cors(corsOptionsDelegate), async
       return res.status(404).send('Resource not found');
     }
 
-    const { name, category, url, image_url, location, description, user_id, phone_number, vacancies, hours, latitude, longitude, place_id } = result.rows[0];
+    const { name, category, subcategory, url, image_url, location, description, user_id, phone_number, vacancies, hours, latitude, longitude, place_id } = result.rows[0];
+    console.log("subcategory", subcategory);
 
     // Insert the resource into the resources table, maintaining the same ID
     await pool.query(
-      'INSERT INTO resources (id, name, category, url, image_url, location, description, phone_number, vacancies, hours, user_id, status, latitude, longitude, place_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)',
-      [id, name, category, url, image_url, location, description, phone_number, vacancies, JSON.stringify(hours), user_id, 'approved', latitude, longitude, place_id]
+      'INSERT INTO resources (id, name, category, subcategory, url, image_url, location, description, phone_number, vacancies, hours, user_id, status, latitude, longitude, place_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)',
+      [id, name, category, subcategory, url, image_url, location, description, phone_number, vacancies, JSON.stringify(hours), user_id, 'approved', latitude, longitude, place_id]
     );
 
     // Update moderation status

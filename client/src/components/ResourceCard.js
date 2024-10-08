@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom'; // Import Link for navigation
 import axios from 'axios';
-import OpeningHoursDisplay from './OpeningHoursDisplay';
 import baseUrl from '../getBaseUrl';
 
 function ResourceCard({ id }) {
@@ -19,7 +18,6 @@ function ResourceCard({ id }) {
 
     const fetchResource = async () => {
       try {
-        console.log(`Fetching resource with ID: ${id}`);
         const response = await axios.get(`http://${baseUrl}:3000/api/resources/${id}`);
         setResource(response.data);
         setLoading(false);
@@ -29,58 +27,39 @@ function ResourceCard({ id }) {
         setLoading(false);
       }
     };
-
     fetchResource();
   }, [id]);
 
-  if (loading) {
-    return <p>Loading resource details...</p>;
-  }
-
-  if (error) {
-    return <p>Error: {error}</p>;
-  }
+  if (loading) return <p>Loading resource details...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
-    <div key={resource.id} className="bg-white shadow-md rounded-lg p-4 w-full">
+    <div className="bg-white shadow-md rounded-lg p-4 w-full">
       {resource ? (
-        <>
-          <img className="w-full h-48 object-cover rounded-t-lg" src={resource.image_url} alt={resource.name} />
-          <div className="p-4">
-            {/* Link the header to the resource details page */}
-            <Link to={`/resource/${resource.id}`}>
-              <h2 className="text-xl font-bold text-blue-600 hover:text-blue-800 transition-colors">
-                {resource.name}
-              </h2>
-            </Link>
-            <p className="text-gray-700">Category: {resource.category}</p>
-            <p className="text-gray-700">Location: {resource.location}</p>
-            <p className="text-gray-600 mt-2">{resource.description}</p>
+        <div className="flex flex-row md:flex-col items-start gap-4">
+          {/* Image */}
+          <img className="w-32 h-32 md:w-full md:h-32 object-cover rounded-t-lg md:w-32 md:h-32 md:rounded-lg" src={resource.image_url} alt={resource.name} />
 
-            {resource.phone_number && (
-              <p className="text-gray-700 mt-2">Phone Number: {resource.phone_number}</p>
-            )}
-            {(resource.vacancies !== null && resource.vacancies !== undefined) && (
-              <p className="text-gray-700 mt-2">Vacancies: {resource.vacancies}</p>
-            )}
-            {resource.hours && <OpeningHoursDisplay periods={resource.hours} />}
+          {/* Resource details */}
+          <div className="flex-1 w-full">
+            <Link to={`/resource/${resource.id}`}>
+              <h2 className="text-xl font-bold text-blue-600 hover:text-blue-800 transition-colors">{resource.name}</h2>
+            </Link>
+            {resource.category && <p className="text-gray-700 mt-2 line-clamp-1 truncate md:hidden">Category: {resource.category}</p>}
             {resource.url && (
-              <p className="mt-2">
-                URL:{' '}
-                <a
-                  href={resource.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500"
-                >
+              <p className="hidden md:block mt-2 line-clamp-1 truncate">
+                Website:{' '}
+                <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-blue-500">
                   {resource.url}
                 </a>
               </p>
             )}
-            {resource.email && <p className="text-gray-700 mt-2">Email: {resource.email}</p>}
-            {resource.rating && <p className="text-gray-700 mt-2">Rating: {resource.rating}</p>}
+            <p className="hidden md:block text-gray-700 line-clamp-1 truncate">Location: {resource.location}</p>
+            {resource.phone_number && <p className="hidden md:block text-gray-700 mt-2 line-clamp-1 truncate">Phone Number: {resource.phone_number}</p>}
+            <p className="text-gray-600 mt-2 line-clamp-2 text-ellipsis">{resource.description}</p>
+            {resource.email && <p className="hidden md:block text-gray-700 mt-2 line-clamp-1 truncate">Email: {resource.email}</p>}
           </div>
-        </>
+        </div>
       ) : (
         <p>No resource details available.</p>
       )}
