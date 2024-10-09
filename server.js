@@ -66,7 +66,7 @@ pool.connect((err) => {
 
 // Search endpoint
 app.get('/api/resources', cors(corsOptionsDelegate), async (req, res) => {
-  const { query, category, page = 1, limit = 10, latitude, longitude, maxDistance } = req.query;
+  const { query, category, subcategory, page = 1, limit = 10, latitude, longitude, maxDistance } = req.query;
 
   const radius = Number(maxDistance) || 50;  // Default max distance is 50 miles
   const searchQuery = query ? `%%${query}%%` : '%%';  // Escape the query for SQL injection
@@ -126,6 +126,14 @@ app.get('/api/resources', cors(corsOptionsDelegate), async (req, res) => {
     paramIndex++;  // Increment after adding category
   }
 
+  // Filter by subcategory
+  if (subcategory && subcategory !== '') {
+    console.log("subcategory", subcategory);
+    sqlQuery += ` AND subcategory = $${paramIndex}`;
+    queryParams.push(subcategory);
+    paramIndex++;
+  }
+
   if (latitudeNum && longitudeNum) {
     sqlQuery += ` ORDER BY distance_miles`;
   }
@@ -136,8 +144,8 @@ app.get('/api/resources', cors(corsOptionsDelegate), async (req, res) => {
   queryParams.push(limit, offset);
 
   // Debugging: Log SQL query and parameters
-  // console.log('SQL Query:', sqlQuery);
-  // console.log('Query Parameters:', queryParams);
+  console.log('SQL Query:', sqlQuery);
+  console.log('Query Parameters:', queryParams);
 
   try {
     const results = await pool.query(sqlQuery, queryParams);

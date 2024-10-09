@@ -16,12 +16,90 @@ function Search() {
   const [maxDistance, setMaxDistance] = useState(50);
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const [resources, setResources] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [places, setPlaces] = useState([]);
-  const categories = ['Food', 'Housing', 'Health', 'Education'];
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  const categories = {
+    "Housing": [
+      "Shelters",
+      "Low income housing",
+      "Hostels",
+      "Camping sites",
+      "Public restroom map",
+      "Public shower map",
+      "Disaster shelters"
+    ],
+    "Transportation": [
+      "Public transportation schedules and routes",
+      "Transportation apps"
+    ],
+    "Food & Water": [
+      "Soup kitchens",
+      "Food stamps",
+      "Food banks",
+      "Water fountain map",
+      "Public restroom map"
+    ],
+    "Financial Assistance": [
+      "Unemployment",
+      "Disability",
+      "Food Stamps",
+      "Rent/Bill aid programs",
+      "Social Security"
+    ],
+    "Mental Health": [
+      "Crisis hotlines",
+      "Local mental health clinics and therapists",
+      "Online counseling and therapy"
+    ],
+    "Addiction & Abuse": [
+      "Crisis hotlines",
+      "Local shelters and rehab centers",
+      "Counseling and therapy"
+    ],
+    "Legal Help & Documents": [
+      "Social Security Card",
+      "Birth certificate",
+      "ID/Drivers License",
+      "Citizenship",
+      "Legal advice",
+      "Legal aid societies"
+    ],
+    "Jobs": [
+      "Temp agencies",
+      "Job listings",
+      "Soft skills"
+    ],
+    "Education": [
+      "Free GED resources",
+      "Free educational books",
+      "Free online courses",
+      "Free certifications",
+      "Free and low cost college"
+    ],
+    "Safety Tips": [
+      "Camping safety tips",
+      "Urban camping/shelter tips",
+      "Hitchhiking safety tips"
+    ],
+    "Health & Hygiene": [
+      "Personal hygiene tips",
+      "Access to public showers",
+      "Dental care resources",
+      "Free or low-cost health clinics",
+      "Vaccination services",
+      "Sexual health and contraception",
+      "Basic first aid",
+      "Hygiene products distribution centers",
+      "Skincare and wound care",
+      "Public restroom locations"
+    ]
+  }
+  
 
   // Fetch resources from the API
   const fetchResources = async () => {
@@ -32,6 +110,7 @@ function Search() {
         params: {
           query,
           category: selectedCategory,
+          subcategory: selectedSubcategory,
           page: currentPage,
           limit: 10,
           latitude: Number(lat), // Ensure latitude is a number
@@ -117,6 +196,7 @@ function Search() {
 
   const handleSearch = () => {
     setCurrentPage(1);
+    setResources([]);
     fetchResources(); // Fetch resources with the current page
   };
 
@@ -136,7 +216,7 @@ function Search() {
 
   useEffect(() => {
     handleSearch(); // Fetch resources when current page, query, or category change
-  }, [currentPage, query, selectedCategory, lat, lng, maxDistance]);
+  }, [currentPage, query, selectedCategory, selectedSubcategory, lat, lng, maxDistance]);
 
   useEffect(() => {
     if (placeId !== lastPlaceId) {
@@ -179,17 +259,37 @@ function Search() {
           value={selectedCategory}
           onChange={(e) => {
             setSelectedCategory(e.target.value);
-            setCurrentPage(1); // Reset page when category changes
-            setResources([]); // Reset resources on category change
+            setSelectedSubcategory(''); // Reset subcategory
+            setResources([]);
           }}
           className="p-2 border rounded w-full md:w-auto focus:outline-none focus:border-blue-500"
         >
           <option value="">All Categories</option>
-          {categories.map(category => (
-            <option key={category} value={category}>{category}</option>
+          {Object.keys(categories).map((category) => (
+            <option key={category} value={category}>
+              {category}
+            </option>
           ))}
         </select>
       </div>
+
+      {/* Subcategory Selector (only visible when a category is selected) */}
+      {selectedCategory && (
+        <div className="mb-4">
+          <select
+            value={selectedSubcategory}
+            onChange={(e) => setSelectedSubcategory(e.target.value)}
+            className="p-2 border rounded w-full md:w-auto focus:outline-none focus:border-blue-500"
+          >
+            <option value="">All Subcategories</option>
+            {categories[selectedCategory].map((subcategory) => (
+              <option key={subcategory} value={subcategory}>
+                {subcategory}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Search Button */}
       <button
