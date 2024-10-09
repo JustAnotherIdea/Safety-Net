@@ -50,7 +50,7 @@ function Navbar() {
   }, []);
 
   return (
-    <nav className="bg-blue-600 p-4 shadow-lg">
+    <nav className="bg-slate-600 p-4 shadow-lg">
       <div className="container mx-auto flex justify-between items-center">
         {/* Branding or Logo */}
         <div className="text-white text-2xl font-bold">

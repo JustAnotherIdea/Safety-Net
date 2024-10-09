@@ -195,8 +195,9 @@ function Search() {
   }
 
   const handleSearch = () => {
-    setCurrentPage(1);
-    setResources([]);
+    console.log('Searching...');
+    //setCurrentPage(1);
+    //setResources([]);
     fetchResources(); // Fetch resources with the current page
   };
 
@@ -204,7 +205,7 @@ function Search() {
   useEffect(() => {
     const handleScroll = () => {
       if (
-        window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 10 &&
+        window.innerHeight + document.documentElement.scrollTop + 150 >= document.documentElement.scrollHeight &&
         !loading
       ) {
         setCurrentPage(prevPage => prevPage + 1); // Load next page
@@ -226,96 +227,93 @@ function Search() {
   }, [placeId]);
 
   return (
-    <div className="w-full mx-auto p-6">
+    <div className="w-full mx-auto">
       
       {/* Search Form */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-3">
         <input
           type="text"
-          className="p-2 border rounded focus:outline-none focus:border-blue-500"
+          className="p-2 border-l border-b border-slate-400 bg-slate-200 col-span-3 focus:outline-none focus:border-blue-500"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Enter search query"
         />
-        <input
-          type="text"
-          className="p-2 border rounded focus:outline-none focus:border-blue-500"
-          value={address}
-          onChange={handleLocationInputChange}
-          placeholder={address !== '' ? address : 'Enter address'}
-        />
-        <input
-          type="number"
-          className="p-2 border rounded focus:outline-none focus:border-blue-500"
-          value={maxDistance}
-          onChange={(e) => setMaxDistance(e.target.value)}
-          placeholder="Max Distance (miles)"
-        />
-      </div>
+        <div className="col-span-2">
+          <input
+            type="text"
+            className="p-2 border-l border-b border-slate-400 bg-slate-200 w-full focus:outline-none focus:border-blue-500"
+            value={address}
+            onChange={handleLocationInputChange}
+            placeholder={address !== '' ? address : 'Enter address'}
+          />
+          
+          {/* Display autocomplete suggestions */}
+          {showSuggestions && (
+            <div className="absolute left-0 w-full">
+              {places.map(place => (
+                <div 
+                  key={place.place_id} 
+                  onClick={() => handlePlaceClick(place)}
+                  className="p-2 bg-gray-100 border-b hover:bg-gray-200 cursor-pointer"
+                >
+                  {place.description}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-      {/* Category Selector */}
-      <div className="mb-4">
-        <select
-          value={selectedCategory}
-          onChange={(e) => {
-            setSelectedCategory(e.target.value);
-            setSelectedSubcategory(''); // Reset subcategory
-            setResources([]);
-          }}
-          className="p-2 border rounded w-full md:w-auto focus:outline-none focus:border-blue-500"
-        >
-          <option value="">All Categories</option>
-          {Object.keys(categories).map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Subcategory Selector (only visible when a category is selected) */}
-      {selectedCategory && (
-        <div className="mb-4">
+        {/* Category Selector */}
+        <div className={`${selectedCategory !== '' ? "col-span-2" : "col-span-4"} w-full`}>
           <select
-            value={selectedSubcategory}
-            onChange={(e) => setSelectedSubcategory(e.target.value)}
-            className="p-2 border rounded w-full md:w-auto focus:outline-none focus:border-blue-500"
+            value={selectedCategory}
+            onChange={(e) => {
+              setSelectedCategory(e.target.value);
+              setSelectedSubcategory(''); // Reset subcategory
+              setResources([]);
+            }}
+            className="p-2 border-l border-b border-slate-400 h-10 w-full bg-slate-400 focus:outline-none focus:border-blue-500"
           >
-            <option value="">All Subcategories</option>
-            {categories[selectedCategory].map((subcategory) => (
-              <option key={subcategory} value={subcategory}>
-                {subcategory}
+            <option value="">All Categories</option>
+            {Object.keys(categories).map((category) => (
+              <option key={category} value={category}>
+                {category}
               </option>
             ))}
           </select>
         </div>
-      )}
 
-      {/* Search Button */}
-      <button
-        onClick={handleSearch}
-        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition w-full md:w-auto"
-      >
-        Search
-      </button>
-
-      {/* Display autocomplete suggestions */}
-      {showSuggestions && (
-        <div className="my-4">
-          {places.map(place => (
-            <div 
-              key={place.place_id} 
-              onClick={() => handlePlaceClick(place)}
-              className="p-2 bg-gray-100 border-b hover:bg-gray-200 cursor-pointer"
+        {/* Subcategory Selector (only visible when a category is selected) */}
+        {selectedCategory && (
+          <div className="w-full col-span-2">
+            <select
+              value={selectedSubcategory}
+              onChange={(e) => setSelectedSubcategory(e.target.value)}
+              className="p-2 border-l border-b border-slate-400 h-10 w-full bg-slate-400 focus:outline-none focus:border-blue-500"
             >
-              {place.description}
-            </div>
-          ))}
-        </div>
-      )}
+              <option value="">All Subcategories</option>
+              {categories[selectedCategory].map((subcategory) => (
+                <option key={subcategory} value={subcategory}>
+                  {subcategory}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+        
+        {/* Max Distance Input */}
+        <input
+          type="number"
+          className="p-2 border-l border-b border-slate-400 bg-slate-200 h-10 col-start-5 focus:outline-none focus:border-blue-500"
+          value={maxDistance}
+          onChange={(e) => setMaxDistance(e.target.value)}
+          placeholder="Max Distance (miles)"
+        />
+
+      </div>
 
       {/* Resource Results */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="pt-2 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2">
         {resources.map(resource => (
           <ResourceCard key={resource.id} id={resource.id} />
         ))}

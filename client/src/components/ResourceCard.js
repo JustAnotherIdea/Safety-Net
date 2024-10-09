@@ -34,16 +34,16 @@ function ResourceCard({ id }) {
   if (error) return <p>{error}</p>;
 
   return (
-    <div className="bg-white shadow-md rounded-lg p-4 w-full">
+    <div className="rounded-lg shadow-lg hover:shadow-xl shadow-slate-300 bg-slate-100 p-2 w-full">
       {resource ? (
         <div className="flex flex-row md:flex-col items-start gap-4">
           {/* Image */}
-          <img className="w-32 h-32 md:w-full md:h-32 object-cover rounded-t-lg md:w-32 md:h-32 md:rounded-lg" src={resource.image_url} alt={resource.name} />
+          <img className="w-32 h-32 md:w-full md:h-32 object-cover rounded-t-lg md:w-32 md:h-32 md:rounded-lg md:border-2 md:border-slate-300" src={resource.image_url} alt={resource.name} />
 
           {/* Resource details */}
           <div className="flex-1 w-full">
             <Link to={`/resource/${resource.id}`}>
-              <h2 className="text-xl font-bold text-blue-600 hover:text-blue-800 transition-colors">{resource.name}</h2>
+              <h2 className="text-xl font-bold text-blue-600 hover:text-blue-800 transition-colors truncate">{resource.name}</h2>
             </Link>
             {resource.category && <p className="text-gray-700 mt-2 line-clamp-1 truncate md:hidden">Category: {resource.category}</p>}
             {resource.url && (
