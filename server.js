@@ -149,7 +149,7 @@ app.get('/api/resources', cors(corsOptionsDelegate), async (req, res) => {
 
   try {
     const results = await pool.query(sqlQuery, queryParams);
-    // console.log('Query Results:', results.rows);
+    console.log('Query Results:', results.rows);
     res.json(results.rows); // Return the results
   } catch (err) {
     console.error('Error fetching resources:', err);

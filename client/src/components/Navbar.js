@@ -50,17 +50,52 @@ function Navbar() {
   }, []);
 
   return (
-    <nav className="bg-slate-600 p-4 shadow-lg">
-      <div className="container mx-auto flex justify-between items-center">
+    <nav className="bg-slate-600 shadow-lg fixed top-0 left-0 right-0 z-50 w-full">
+      <div className="w-full flex flex-col md:flex-row md:justify-between md:items-stretch">
         {/* Branding or Logo */}
-        <div className="text-white text-2xl font-bold">
+        <div className="text-white text-2xl font-bold p-4 w-full md:w-auto">
           <Link to="/">Safety.net</Link>
         </div>
         
+        {/* Navigation Links */}
+        <ul
+          className={`md:flex md:items-stretch md:justify-end text-white w-full
+            transition-all duration-300 ease-in-out
+            ${isMenuOpen ? 'max-h-screen' : 'max-h-0 md:max-h-screen'}
+            overflow-hidden md:overflow-visible
+            bg-slate-600 md:bg-transparent md:shadow-none`}
+        >
+          <li className="w-full md:w-auto md:h-full"><Link to="/contribute" className="block px-4 pb-2 md:pt-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Contribute</Link></li>
+          <li className="w-full md:w-auto md:h-full"><Link to="/contact" className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Contact</Link></li>
+          {token ? (
+            <>
+              <li className="w-full md:w-auto md:h-full"><Link to="/account" className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Account</Link></li>
+              {userRole === 'admin' && <li className="w-full md:w-auto md:h-full"><Link to="/admin-users" className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Manage Users</Link></li>}
+              {(userRole === 'admin' || userRole === 'moderator') && (
+                <li className="w-full md:w-auto md:h-full"><Link to="/admin-moderation" className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Moderate Resources</Link></li>
+              )}
+              <li className="w-full md:w-auto md:h-full">
+                <div 
+                  tabIndex="0"
+                  onClick={handleLogout} 
+                  className="block px-4 pt-2 pb-4 md:pb-2 md:h-full md:flex md:items-center text-red-500 cursor-pointer hover:bg-slate-700 w-full"
+                >
+                  Logout
+                </div>
+              </li>
+            </>
+          ) : (
+            <>
+              <li className="w-full md:w-auto md:h-full"><Link to="/login" className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Login</Link></li>
+              <li className="w-full md:w-auto md:h-full"><Link to="/register" className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Register</Link></li>
+            </>
+          )}
+        </ul>
+
         {/* Hamburger Button for Mobile */}
         <button
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="text-white block md:hidden focus:outline-none"
+          className="text-white block md:hidden focus:outline-none absolute top-4 right-4"
         >
           <svg
             className="h-6 w-6"
@@ -86,38 +121,6 @@ function Navbar() {
             )}
           </svg>
         </button>
-
-        {/* Navigation Links */}
-        <ul
-          className={`md:flex md:items-center md:space-x-4 text-white ${
-            isMenuOpen ? 'block' : 'hidden'
-          }`}
-        >
-          <li><Link to="/contribute" className="block px-2 py-1 hover:text-gray-300">Contribute</Link></li>
-          <li><Link to="/contact" className="block px-2 py-1 hover:text-gray-300">Contact</Link></li>
-          {token ? (
-            <>
-              <li><Link to="/account" className="block px-2 py-1 hover:text-gray-300">Account</Link></li>
-              {userRole === 'admin' && <li><Link to="/admin-users" className="block px-2 py-1 hover:text-gray-300">Manage Users</Link></li>}
-              {(userRole === 'admin' || userRole === 'moderator') && (
-                <li><Link to="/admin-moderation" className="block px-2 py-1 hover:text-gray-300">Moderate Resources</Link></li>
-              )}
-              <li>
-                <button 
-                  onClick={handleLogout} 
-                  className="bg-red-500 px-3 py-1 rounded hover:bg-red-700 transition block"
-                >
-                  Logout
-                </button>
-              </li>
-            </>
-          ) : (
-            <>
-              <li><Link to="/login" className="block px-2 py-1 hover:text-gray-300">Login</Link></li>
-              <li><Link to="/register" className="block px-2 py-1 hover:text-gray-300">Register</Link></li>
-            </>
-          )}
-        </ul>
       </div>
     </nav>
   );

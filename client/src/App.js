@@ -25,7 +25,7 @@ import 'react-toastify/dist/ReactToastify.css'; // Import styles for notificatio
 function App() {
   return (
     <Router>
-      <div className="h-screen bg-slate-300">
+      <div className="h-full bg-slate-300">
         <Navbar />
         <ToastContainer /> {/* Add ToastContainer here */}
         <Routes>
