@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import ResourceCard from './ResourceCard.js';
+import SearchForm from './SearchForm.js';
 import baseUrl from '../getBaseUrl.js';
 
 function Search() {
@@ -226,95 +227,26 @@ function Search() {
     }
   }, [placeId]);
 
-  const SearchForm = () => (
-    <div className="grid grid-cols-5">
-      <input
-        type="text"
-        className="p-2 border-t border-l border-slate-400 bg-slate-200 col-span-3 focus:outline-none focus:border-blue-500"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Enter search query"
-      />
-      <div className="col-span-2">
-        <input
-          type="text"
-          className="p-2 border-t border-l border-slate-400 bg-slate-200 w-full focus:outline-none focus:border-blue-500"
-          value={address}
-          onChange={handleLocationInputChange}
-          placeholder={address !== '' ? address : 'Enter address'}
-        />
-        
-        {/* Display autocomplete suggestions */}
-        {showSuggestions && (
-          <div className="absolute left-0 w-full">
-            {places.map(place => (
-              <div 
-                key={place.place_id} 
-                onClick={() => handlePlaceClick(place)}
-                className="p-2 bg-gray-100 border-b hover:bg-gray-200 cursor-pointer"
-              >
-                {place.description}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Category Selector */}
-      <div className={`${selectedCategory !== '' ? "col-span-2" : "col-span-4"} w-full`}>
-        <select
-          value={selectedCategory}
-          onChange={(e) => {
-            setSelectedCategory(e.target.value);
-            setSelectedSubcategory('');
-            setResources([]);
-          }}
-          className="p-2 border-t border-l border-slate-400 h-10 w-full bg-slate-400 focus:outline-none focus:border-blue-500"
-        >
-          <option value="">All Categories</option>
-          {Object.keys(categories).map((category) => (
-            <option key={category} value={category}>
-              {category}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Subcategory Selector (only visible when a category is selected) */}
-      {selectedCategory && (
-        <div className="w-full col-span-2">
-          <select
-            value={selectedSubcategory}
-            onChange={(e) => setSelectedSubcategory(e.target.value)}
-            className="p-2 border-t border-l border-slate-400 h-10 w-full bg-slate-400 focus:outline-none focus:border-blue-500"
-          >
-            <option value="">All Subcategories</option>
-            {categories[selectedCategory].map((subcategory) => (
-              <option key={subcategory} value={subcategory}>
-                {subcategory}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-      
-      {/* Max Distance Input */}
-      <input
-        type="number"
-        className="p-2 border-t border-l border-slate-400 bg-slate-200 h-10 col-start-5 focus:outline-none focus:border-blue-500"
-        value={maxDistance}
-        onChange={(e) => setMaxDistance(e.target.value)}
-        placeholder="Max Distance (miles)"
-      />
-
-    </div>
-  );
-
   return (
     <div className="mt-16 w-full mx-auto flex flex-col min-h-screen">
       {/* Top Search Form (visible on large screens) */}
       <div className="hidden lg:block fixed top-16 left-0 right-0 bg-white shadow-lg z-10">
-        <SearchForm />
+        <SearchForm 
+          query={query}
+          setQuery={setQuery}
+          address={address}
+          setAddress={setAddress}
+          placeId={placeId}
+          setPlaceId={setPlaceId}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          selectedSubcategory={selectedSubcategory}
+          setSelectedSubcategory={setSelectedSubcategory}
+          maxDistance={maxDistance}
+          setMaxDistance={setMaxDistance}
+          categories={categories}
+          onSearch={handleSearch}
+        />
       </div>
 
       {/* Resource Results */}
@@ -330,8 +262,23 @@ function Search() {
       </div>
 
       {/* Bottom Search Form (visible on small screens) */}
-      <div className="lg:hidden sticky bottom-0 left-0 right-0 bg-white shadow-lg z-10">
-        <SearchForm />
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-10">
+        <SearchForm 
+          query={query}
+          setQuery={setQuery}
+          address={address}
+          setAddress={setAddress}
+          placeId={placeId}
+          setPlaceId={setPlaceId}
+          selectedCategory={selectedCategory}
+          setSelectedCategory={setSelectedCategory}
+          selectedSubcategory={selectedSubcategory}
+          setSelectedSubcategory={setSelectedSubcategory}
+          maxDistance={maxDistance}
+          setMaxDistance={setMaxDistance}
+          categories={categories}
+          onSearch={handleSearch}
+        />
       </div>
     </div>
   );
