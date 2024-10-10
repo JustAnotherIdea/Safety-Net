@@ -34,6 +34,10 @@ function Navbar() {
 
   const userRole = getUserRole(); // Get the current user's role
 
+  const closeMenu = () => {
+    setIsMenuOpen(false);
+  };
+
   // Listen for custom 'tokenRefreshed' and 'login' events
   useEffect(() => {
     const handleTokenUpdate = () => {
@@ -54,7 +58,7 @@ function Navbar() {
       <div className="w-full flex flex-col md:flex-row md:justify-between md:items-stretch">
         {/* Branding or Logo */}
         <div className="text-white text-2xl font-bold p-4 w-full md:w-auto">
-          <Link to="/">Safety.net</Link>
+          <Link to="/" onClick={closeMenu}>Safety.net</Link>
         </div>
         
         {/* Navigation Links */}
@@ -65,19 +69,22 @@ function Navbar() {
             overflow-hidden md:overflow-visible
             bg-slate-600 md:bg-transparent md:shadow-none`}
         >
-          <li className="w-full md:w-auto md:h-full"><Link to="/contribute" className="block px-4 pb-2 md:pt-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Contribute</Link></li>
-          <li className="w-full md:w-auto md:h-full"><Link to="/contact" className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Contact</Link></li>
+          <li className="w-full md:w-auto md:h-full"><Link to="/contribute" onClick={closeMenu} className="block px-4 pb-2 md:pt-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Contribute</Link></li>
+          <li className="w-full md:w-auto md:h-full"><Link to="/contact" onClick={closeMenu} className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Contact</Link></li>
           {token ? (
             <>
-              <li className="w-full md:w-auto md:h-full"><Link to="/account" className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Account</Link></li>
-              {userRole === 'admin' && <li className="w-full md:w-auto md:h-full"><Link to="/admin-users" className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Manage Users</Link></li>}
+              <li className="w-full md:w-auto md:h-full"><Link to="/account" onClick={closeMenu} className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Account</Link></li>
+              {userRole === 'admin' && <li className="w-full md:w-auto md:h-full"><Link to="/admin-users" onClick={closeMenu} className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Manage Users</Link></li>}
               {(userRole === 'admin' || userRole === 'moderator') && (
-                <li className="w-full md:w-auto md:h-full"><Link to="/admin-moderation" className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Moderate Resources</Link></li>
+                <li className="w-full md:w-auto md:h-full"><Link to="/admin-moderation" onClick={closeMenu} className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Moderate Resources</Link></li>
               )}
               <li className="w-full md:w-auto md:h-full">
                 <div 
                   tabIndex="0"
-                  onClick={handleLogout} 
+                  onClick={() => {
+                    closeMenu();
+                    handleLogout();
+                  }} 
                   className="block px-4 pt-2 pb-4 md:pb-2 md:h-full md:flex md:items-center text-red-500 cursor-pointer hover:bg-slate-700 w-full"
                 >
                   Logout
@@ -86,8 +93,8 @@ function Navbar() {
             </>
           ) : (
             <>
-              <li className="w-full md:w-auto md:h-full"><Link to="/login" className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Login</Link></li>
-              <li className="w-full md:w-auto md:h-full"><Link to="/register" className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Register</Link></li>
+              <li className="w-full md:w-auto md:h-full"><Link to="/login" onClick={closeMenu} className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Login</Link></li>
+              <li className="w-full md:w-auto md:h-full"><Link to="/register" onClick={closeMenu} className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Register</Link></li>
             </>
           )}
         </ul>

@@ -228,9 +228,9 @@ function Search() {
   }, [placeId]);
 
   return (
-    <div className="mt-16 w-full mx-auto flex flex-col min-h-screen">
+    <div className="w-full mx-auto flex flex-col min-h-screen">
       {/* Top Search Form (visible on large screens) */}
-      <div className="hidden lg:block fixed top-16 left-0 right-0 bg-white shadow-lg z-10">
+      <div className="hidden lg:block fixed top-16 left-0 right-0 bg-slate-200 shadow-lg z-10">
         <SearchForm 
           query={query}
           setQuery={setQuery}
@@ -251,7 +251,7 @@ function Search() {
 
       {/* Resource Results */}
       <div className="flex-grow overflow-y-auto lg:pt-24 pb-24 lg:pb-0">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 md:gap-2">
           {resources.map(resource => (
             <ResourceCard key={resource.id} id={resource.id} />
           ))}
@@ -262,7 +262,7 @@ function Search() {
       </div>
 
       {/* Bottom Search Form (visible on small screens) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white shadow-lg z-10">
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-slate-200 shadow-lg z-10">
         <SearchForm 
           query={query}
           setQuery={setQuery}

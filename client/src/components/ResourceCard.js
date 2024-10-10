@@ -34,11 +34,11 @@ function ResourceCard({ id }) {
   if (error) return <p>{error}</p>;
 
   return (
-    <div className="rounded-lg shadow-lg hover:shadow-xl shadow-slate-300 bg-slate-100 p-2 w-full">
+    <div className="rounded-lg shadow-lg hover:shadow-xl shadow-slate-300 bg-slate-100 p-2 w-full border-b-2 border-slate-300 md:border-b-0">
       {resource ? (
         <div className="flex flex-row md:flex-col items-start gap-4">
           {/* Image */}
-          <img className="w-32 h-32 md:w-full md:h-32 object-cover rounded-t-lg md:w-32 md:h-32 md:rounded-lg md:border-2 md:border-slate-300" src={resource.image_url} alt={resource.name} />
+          <img className="w-32 h-32 aspect-square md:w-full md:h-32 md:aspect-auto object-cover rounded-lg md:w-32 md:h-32 md:rounded-lg md:border-2 md:border-slate-300" src={resource.image_url} alt={resource.name} />
 
           {/* Resource details */}
           <div className="flex-1 w-full">

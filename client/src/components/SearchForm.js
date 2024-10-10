@@ -53,7 +53,7 @@ function SearchForm({
         className="p-2 border-t border-l border-slate-400 bg-slate-200 col-span-3 focus:outline-none focus:border-blue-500"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Enter search query"
+        placeholder="Search"
       />
       <div className="col-span-2">
         <input
