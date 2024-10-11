@@ -128,11 +128,6 @@ function Search() {
         
         // Combine previous and new resources
         const combinedResources = [...prevResources, ...newResources];
-        
-        // If combined length exceeds 16, remove the older resources
-        if (combinedResources.length > 16) {
-          return combinedResources.slice(combinedResources.length - 16);
-        }
   
         return combinedResources;
       });
