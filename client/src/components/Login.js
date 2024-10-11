@@ -54,7 +54,7 @@ function Login() {
   };
 
   return (
-    <div className="max-w-sm mx-auto p-6 bg-white shadow-lg rounded-lg mt-16">
+    <div className="max-w-sm mx-auto p-6 bg-white shadow-lg rounded-lg">
       <h2 className="text-2xl font-bold text-center mb-6">Login</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         

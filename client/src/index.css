@@ -13,6 +13,9 @@ code {
 }
 
 html, body {
-  height: 100%;
+  height: calc(100vh - 4rem);
+}
+
+#root {
   margin-top: 4rem;
 }
