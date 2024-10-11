@@ -11,7 +11,7 @@ function Search() {
   const storedLat = localStorage.getItem('lat');
   const storedLng = localStorage.getItem('lng');
   const [placeId, setPlaceId] = useState(storedPlaceId || '');
-  let lastPlaceId = storedPlaceId;
+  const [lastPlaceId, setLastPlaceId] = useState(storedPlaceId || '');
   const [address, setAddress] = useState(storedAddress || '');
   const [lat, setLat] = useState(storedLat || '');
   const [lng, setLng] = useState(storedLng || '');
@@ -154,7 +154,7 @@ function Search() {
       setLng(details.lng);
       localStorage.setItem('lat', details.lat);
       localStorage.setItem('lng', details.lng);
-      lastPlaceId = placeId;
+      setLastPlaceId(placeId);
     }
   }
 
@@ -194,6 +194,9 @@ function Search() {
     if (placeId !== lastPlaceId) {
       getLocation();
       setResources([]); // Reset resources when placeId changes
+      setHasMore(true); // Reset hasMore when placeId changes
+      setCurrentPage(1); // Reset current page when placeId changes
+      // Remove this line: fetchResources(); // Fetch resources with the current page
     }
   }, [placeId]);
 
