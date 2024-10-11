@@ -107,7 +107,9 @@ function Search() {
     setResources([]);
     setCurrentPage(1);
     setHasMore(true);
-    window.scrollTo(10, 0);
+    window.scrollTo({
+      top: 16,
+    });
   };
 
   // Modify the fetchResources function
@@ -202,7 +204,7 @@ function Search() {
   }, [placeId, lastPlaceId]);
 
   return (
-    <div className="w-full mx-auto flex flex-col min-h-screen">
+    <div className="w-full mx-auto flex flex-col">
       {/* Top Search Form (visible on large screens) */}
       <div className="hidden lg:block fixed top-16 left-0 right-0 bg-slate-200 shadow-lg z-10">
         <SearchForm 
