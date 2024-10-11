@@ -3,6 +3,7 @@ import axios from 'axios';
 import ResourceCard from './ResourceCard.js';
 import SearchForm from './SearchForm.js';
 import baseUrl from '../getBaseUrl.js';
+import { debounce } from 'lodash'; // Add this import
 
 function Search() {
   const storedPlaceId = localStorage.getItem('place_id');
@@ -23,6 +24,7 @@ function Search() {
   const [loading, setLoading] = useState(false);
   const [places, setPlaces] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   const categories = {
     "Housing": [
@@ -104,7 +106,7 @@ function Search() {
 
   // Fetch resources from the API
   const fetchResources = async () => {
-    if (loading) return; // Avoid fetching if already loading
+    if (loading || !hasMore) return; // Avoid fetching if already loading or no more resources
     setLoading(true);
     try {
       const response = await axios.get(`http://${baseUrl}:3000/api/resources`, {
@@ -126,10 +128,12 @@ function Search() {
           !prevResources.some(existingRes => existingRes.id === res.id)
         );
         
-        // Combine previous and new resources
-        const combinedResources = [...prevResources, ...newResources];
-  
-        return combinedResources;
+        // If no new resources are returned, we've reached the end
+        if (newResources.length === 0) {
+          setHasMore(false);
+        }
+        
+        return [...prevResources, ...newResources];
       });
     } catch (error) {
       console.error('Error fetching resources:', error);
@@ -194,22 +198,29 @@ function Search() {
     console.log('Searching...');
     setCurrentPage(1);
     //setResources([]);
+    setHasMore(true); // Reset hasMore when starting a new search
     fetchResources(); // Fetch resources with the current page
   };
 
+  // Debounced scroll handler
+  const debouncedHandleScroll = debounce(() => {
+    if (
+      window.innerHeight + document.documentElement.scrollTop + 150 >= document.documentElement.scrollHeight &&
+      !loading &&
+      hasMore
+    ) {
+      setCurrentPage(prevPage => prevPage + 1);
+    }
+  }, 200); // Adjust the debounce delay as needed
+
   // Scroll detection logic
   useEffect(() => {
-    const handleScroll = () => {
-      if (
-        window.innerHeight + document.documentElement.scrollTop + 150 >= document.documentElement.scrollHeight &&
-        !loading
-      ) {
-        setCurrentPage(prevPage => prevPage + 1); // Load next page
-      }
+    window.addEventListener('scroll', debouncedHandleScroll);
+    return () => {
+      window.removeEventListener('scroll', debouncedHandleScroll);
+      debouncedHandleScroll.cancel(); // Cancel any pending debounce on unmount
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll); // Cleanup
-  }, [loading]);
+  }, [loading, hasMore]);
 
   useEffect(() => {
     handleSearch(); // Fetch resources when current page, query, or category change
@@ -254,6 +265,11 @@ function Search() {
 
         {/* Loading State */}
         {loading && <p className="text-center mb-4 text-gray-600">Loading more resources...</p>}
+        
+        {/* End of Resources Message */}
+        {!loading && !hasMore && resources.length > 0 && (
+          <p className="text-center mb-4 text-gray-600">No more resources to load.</p>
+        )}
       </div>
 
       {/* Bottom Search Form (visible on small screens) */}
