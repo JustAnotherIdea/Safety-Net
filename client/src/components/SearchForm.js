@@ -106,9 +106,9 @@ function SearchForm({
             className="p-2 border-t border-l border-slate-400 h-10 w-full bg-slate-400 focus:outline-none focus:border-blue-500"
           >
             <option value="">All Subcategories</option>
-            {categories[selectedCategory].map((subcategory) => (
-              <option key={subcategory} value={subcategory}>
-                {subcategory}
+            {categories[selectedCategory].subcategories.map((subcategory) => (
+              <option key={subcategory.name} value={subcategory.name}>
+                {subcategory.name}
               </option>
             ))}
           </select>

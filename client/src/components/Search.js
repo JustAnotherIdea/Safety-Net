@@ -4,6 +4,7 @@ import ResourceCard from './ResourceCard.js';
 import SearchForm from './SearchForm.js';
 import baseUrl from '../getBaseUrl.js';
 import { debounce } from 'lodash'; // Add this import
+import CategorySelectionPanel from './CategorySelectionPanel';
 
 function Search() {
   const storedPlaceId = localStorage.getItem('place_id');
@@ -24,82 +25,269 @@ function Search() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
+  // Updated categories object with images
   const categories = {
-    "Housing": [
-      "Shelters",
-      "Low income housing",
-      "Hostels",
-      "Camping sites",
-      "Public restroom map",
-      "Public shower map",
-      "Disaster shelters"
+  Housing: {
+    image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+    subcategories: [
+      {
+        name: "Shelters",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Low income housing",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Hostels",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Camping sites",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Public restroom map",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Public shower map",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Disaster shelters",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
     ],
-    "Transportation": [
-      "Public transportation schedules and routes",
-      "Transportation apps"
+  },
+  Transportation: {
+    image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+    subcategories: [
+      {
+        name: "Public transportation schedules and routes",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Transportation apps",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
     ],
-    "Food & Water": [
-      "Soup kitchens",
-      "Food stamps",
-      "Food banks",
-      "Water fountain map",
-      "Public restroom map"
+  },
+  "Food & Water": {
+    image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+    subcategories: [
+      {
+        name: "Soup kitchens",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Food stamps",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Food banks",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Water fountain map",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Public restroom map",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
     ],
-    "Financial Assistance": [
-      "Unemployment",
-      "Disability",
-      "Food Stamps",
-      "Rent/Bill aid programs",
-      "Social Security"
+  },
+  "Financial Assistance": {
+    image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+    subcategories: [
+      {
+        name: "Unemployment",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Disability",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Food Stamps",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      { name: "Rent/Bill aid programs",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg}",
+      },
+      {
+        name: "Social Security",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
     ],
-    "Mental Health": [
-      "Crisis hotlines",
-      "Local mental health clinics and therapists",
-      "Online counseling and therapy"
+  },
+  "Mental Health": {
+    image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+    subcategories: [
+      {
+        name: "Crisis hotlines",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Local mental health clinics and therapists",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Online counseling and therapy",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
     ],
-    "Addiction & Abuse": [
-      "Crisis hotlines",
-      "Local shelters and rehab centers",
-      "Counseling and therapy"
+  },
+  "Addiction & Abuse": {
+    image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+    subcategories: [
+      {
+        name: "Crisis hotlines",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Local shelters and rehab centers",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Counseling and therapy",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
     ],
-    "Legal Help & Documents": [
-      "Social Security Card",
-      "Birth certificate",
-      "ID/Drivers License",
-      "Citizenship",
-      "Legal advice",
-      "Legal aid societies"
+  },
+  "Legal Help & Documents": {
+    image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+    subcategories: [
+      {
+        name: "Social Security Card",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Birth certificate",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "ID/Drivers License",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Citizenship",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Legal advice",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Legal aid societies",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
     ],
-    "Jobs": [
-      "Temp agencies",
-      "Job listings",
-      "Soft skills"
+  },
+  Jobs: {
+    image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+    subcategories: [
+      {
+        name: "Temp agencies",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Job listings",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Soft skills",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
     ],
-    "Education": [
-      "Free GED resources",
-      "Free educational books",
-      "Free online courses",
-      "Free certifications",
-      "Free and low cost college"
+  },
+  Education: {
+    image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+    subcategories: [
+      {
+        name: "Free GED resources",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Free educational books",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Free online courses",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Free certifications",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Free and low cost college",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
     ],
-    "Safety Tips": [
-      "Camping safety tips",
-      "Urban camping/shelter tips",
-      "Hitchhiking safety tips"
+  },
+  "Safety Tips": {
+    image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+    subcategories: [
+      {
+        name: "Camping safety tips",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      { name: "Urban camping/shelter tips",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg}",
+      },
+      {
+        name: "Hitchhiking safety tips",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
     ],
-    "Health & Hygiene": [
-      "Personal hygiene tips",
-      "Access to public showers",
-      "Dental care resources",
-      "Free or low-cost health clinics",
-      "Vaccination services",
-      "Sexual health and contraception",
-      "Basic first aid",
-      "Hygiene products distribution centers",
-      "Skincare and wound care",
-      "Public restroom locations"
-    ]
-  }
+  },
+  "Health & Hygiene": {
+    image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+    subcategories: [
+      {
+        name: "Personal hygiene tips",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Access to public showers",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Dental care resources",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Free or low-cost health clinics",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Vaccination services",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      { name: "Sexual health and contraception",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg}",
+      },
+      {
+        name: "Basic first aid",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Hygiene products distribution centers",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Skincare and wound care",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+      {
+        name: "Public restroom locations",
+        image: "https://static.vecteezy.com/system/resources/thumbnails/008/695/917/small/no-image-available-icon-simple-two-colors-template-for-no-image-or-picture-coming-soon-and-placeholder-illustration-isolated-on-white-background-vector.jpg",
+      },
+    ],
+  },
+};
   
 
   // Add this new function to reset the search state
@@ -206,6 +394,9 @@ function Search() {
     }
   }, [placeId, lastPlaceId]);
 
+  // Add this function to determine if the CategorySelectionPanel should be shown
+  const showCategorySelectionPanel = !selectedCategory && !query.trim();
+
   return (
     <div className="w-full mx-auto flex flex-col">
       {/* Top Search Form (visible on large screens) */}
@@ -230,11 +421,20 @@ function Search() {
 
       {/* Resource Results */}
       <div className="flex-grow overflow-y-auto lg:pt-24 pb-24 lg:pb-0">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 md:gap-2">
-          {resources.map(resource => (
-            <ResourceCard key={resource.id} id={resource.id} />
-          ))}
-        </div>
+        {showCategorySelectionPanel ? (
+          <CategorySelectionPanel
+            categories={categories}
+            selectedCategory={selectedCategory}
+            setSelectedCategory={setSelectedCategory}
+            setSelectedSubcategory={setSelectedSubcategory}
+          />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 md:gap-2">
+            {resources.map(resource => (
+              <ResourceCard key={resource.id} id={resource.id} />
+            ))}
+          </div>
+        )}
 
         {/* Loading State */}
         {loading && <p className="text-center mb-4 text-gray-600">Loading more resources...</p>}
