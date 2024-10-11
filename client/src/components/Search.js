@@ -102,9 +102,17 @@ function Search() {
   }
   
 
-  // Fetch resources from the API
-  const fetchResources = async () => {
-    if (loading || !hasMore) return; // Avoid fetching if already loading or no more resources
+  // Add this new function to reset the search state
+  const resetSearch = () => {
+    setResources([]);
+    setCurrentPage(1);
+    setHasMore(true);
+    window.scrollTo(10, 0);
+  };
+
+  // Modify the fetchResources function
+  const fetchResources = async (page = 1) => {
+    if (loading || (!hasMore && page !== 1)) return;
     setLoading(true);
     try {
       const response = await axios.get(`http://${baseUrl}:3000/api/resources`, {
@@ -112,27 +120,23 @@ function Search() {
           query,
           category: selectedCategory,
           subcategory: selectedSubcategory,
-          page: currentPage,
+          page: page,
           limit: 10,
-          latitude: Number(lat), // Ensure latitude is a number
-          longitude: Number(lng), // Ensure longitude is a number
-          maxDistance: parseInt(maxDistance, 10) // Ensure maxDistance is a number
+          latitude: Number(lat),
+          longitude: Number(lng),
+          maxDistance: parseInt(maxDistance, 10)
         }
       });
-  
-      // Check and only append new unique resources
+
       setResources(prevResources => {
-        const newResources = response.data.filter(res =>
-          !prevResources.some(existingRes => existingRes.id === res.id)
-        );
+        const newResources = page === 1 
+          ? response.data 
+          : [...prevResources, ...response.data.filter(res => !prevResources.some(existingRes => existingRes.id === res.id))];
         
-        // If no new resources are returned, we've reached the end
-        if (newResources.length === 0) {
-          setHasMore(false);
-        }
-        
-        return [...prevResources, ...newResources];
+        setHasMore(response.data.length === 10);
+        return newResources;
       });
+      setCurrentPage(page);
     } catch (error) {
       console.error('Error fetching resources:', error);
     } finally {
@@ -158,12 +162,10 @@ function Search() {
     }
   }
 
+  // Modify the handleSearch function
   const handleSearch = () => {
     console.log('Searching...');
-    setCurrentPage(1);
-    //setResources([]);
-    setHasMore(true); // Reset hasMore when starting a new search
-    fetchResources(); // Fetch resources with the current page
+    fetchResources(1);
   };
 
   // Debounced scroll handler
@@ -173,7 +175,7 @@ function Search() {
       !loading &&
       hasMore
     ) {
-      setCurrentPage(prevPage => prevPage + 1);
+      fetchResources(currentPage + 1);
     }
   }, 200); // Adjust the debounce delay as needed
 
@@ -186,19 +188,18 @@ function Search() {
     };
   }, [loading, hasMore]);
 
+  // Modify this useEffect to reset and fetch when search parameters change
   useEffect(() => {
-    handleSearch(); // Fetch resources when current page, query, or category change
-  }, [currentPage, query, selectedCategory, selectedSubcategory, lat, lng, maxDistance]);
+    fetchResources(1);
+  }, [query, selectedCategory, selectedSubcategory, lat, lng, maxDistance]);
 
+  // Remove the fetchResources call from this useEffect
   useEffect(() => {
     if (placeId !== lastPlaceId) {
       getLocation();
-      setResources([]); // Reset resources when placeId changes
-      setHasMore(true); // Reset hasMore when placeId changes
-      setCurrentPage(1); // Reset current page when placeId changes
-      // Remove this line: fetchResources(); // Fetch resources with the current page
+      resetSearch();
     }
-  }, [placeId]);
+  }, [placeId, lastPlaceId]);
 
   return (
     <div className="w-full mx-auto flex flex-col min-h-screen">

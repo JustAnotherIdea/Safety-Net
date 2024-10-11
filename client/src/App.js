@@ -25,8 +25,8 @@ import 'react-toastify/dist/ReactToastify.css'; // Import styles for notificatio
 function App() {
   return (
     <Router>
-      <div className="">
         <Navbar />
+      <div className="overflow-hidden">
         <ToastContainer /> {/* Add ToastContainer here */}
         <Routes>
           <Route path="/" element={<Search />} />

@@ -12,10 +12,10 @@ code {
     monospace;
 }
 
-html, body {
+/* html, body {
   height: calc(100vh - 4rem);
 }
 
 #root {
   margin-top: 4rem;
-}
+} */
