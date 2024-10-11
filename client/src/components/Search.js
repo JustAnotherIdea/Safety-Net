@@ -158,8 +158,11 @@ function Search() {
       };
       setLat(details.lat);
       setLng(details.lng);
+      setAddress(details.address);
       localStorage.setItem('lat', details.lat);
       localStorage.setItem('lng', details.lng);
+      localStorage.setItem('address', details.address);
+      localStorage.setItem('place_id', placeId);
       setLastPlaceId(placeId);
     }
   }

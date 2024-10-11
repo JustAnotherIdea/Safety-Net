@@ -191,7 +191,7 @@ app.get('/api/user/resources', cors(corsOptionsDelegate), async (req, res) => {
   } catch (err) {
     // Handle JWT verification errors (invalid or expired token)
     if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+      return res.sendStatus(401); // Return 401 Unauthorized
     }
     // Handle any other errors as a server error
     console.error('Error fetching user resources:', err);
@@ -457,10 +457,12 @@ app.post('/api/upload', upload.single('file'), cors(corsOptionsDelegate), async 
   });
 });
 
-// Get all moderated resource ids
+// Get all moderated resources
 app.get('/api/moderated-resources', cors(corsOptionsDelegate), async (req, res) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).send('Access denied');
+
+  const { query, category, subcategory, page = 1, limit = 10, latitude, longitude, maxDistance, status = 'pending' } = req.query;
 
   try {
     const verified = jwt.verify(token, SECRET_KEY);
@@ -472,14 +474,67 @@ app.get('/api/moderated-resources', cors(corsOptionsDelegate), async (req, res) 
       return res.status(403).send('You are not a moderator'); // Forbidden
     }
 
-    const results = await pool.query(`SELECT id FROM moderated_resources WHERE status = 'pending'`);
-    res.json(results.rows); // Return all moderated resources
-  } catch (err) {
-    // Handle JWT verification errors (invalid or expired token)
-    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+    const radius = Number(maxDistance) || 50;  // Default max distance is 50 miles
+    const searchQuery = query ? `%%${query}%%` : '%%';  // Escape the query for SQL injection
+    const queryParams = [];
+    let paramIndex = 1;  // Initialize parameter index
+
+    const latitudeNum = Number(latitude);
+    const longitudeNum = Number(longitude);
+
+    let sqlQuery = `SELECT *`;
+
+    // If latitude and longitude are provided, calculate distance in miles
+    if (latitudeNum && longitudeNum) {
+      sqlQuery += `, (earth_distance(ll_to_earth($${paramIndex}, $${paramIndex + 1}), ll_to_earth(latitude, longitude)) / 1609.34) AS distance_miles`;
+      queryParams.push(latitudeNum, longitudeNum);
+      paramIndex += 2;
     }
-    // Handle any other errors as a server error
+
+    sqlQuery += ` FROM moderated_resources WHERE status = $${paramIndex} AND (name ILIKE $${paramIndex + 1} OR description ILIKE $${paramIndex + 1})`;
+    queryParams.push(status, searchQuery);
+    paramIndex += 2;
+
+    // If latitude and longitude are provided, add distance filtering
+    if (latitudeNum && longitudeNum) {
+      sqlQuery += ` AND earth_box(ll_to_earth($${paramIndex - 4}, $${paramIndex - 3}), $${paramIndex} * 1609.34) @> ll_to_earth(latitude, longitude)
+                    AND earth_distance(ll_to_earth($${paramIndex - 4}, $${paramIndex - 3}), ll_to_earth(latitude, longitude)) <= $${paramIndex} * 1609.34`;
+      queryParams.push(radius);
+      paramIndex++;
+    }
+
+    // If category is provided, add it as a filter
+    if (category && category !== '') {
+      sqlQuery += ` AND category = $${paramIndex}`;
+      queryParams.push(category);
+      paramIndex++;
+    }
+
+    // Filter by subcategory
+    if (subcategory && subcategory !== '') {
+      sqlQuery += ` AND subcategory = $${paramIndex}`;
+      queryParams.push(subcategory);
+      paramIndex++;
+    }
+
+    if (latitudeNum && longitudeNum) {
+      sqlQuery += ` ORDER BY distance_miles`;
+    }
+
+    // Add pagination
+    const offset = (page - 1) * limit;
+    sqlQuery += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+    queryParams.push(limit, offset);
+
+    console.log('SQL Query:', sqlQuery);
+    console.log('Query Parameters:', queryParams);
+
+    const results = await pool.query(sqlQuery, queryParams);
+    res.json(results.rows);
+  } catch (err) {
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token');
+    }
     console.error('Error fetching moderated resources:', err);
     res.status(500).send('Server error');
   }

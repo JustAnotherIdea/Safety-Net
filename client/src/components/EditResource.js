@@ -1,36 +1,33 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom'; // Import Link for navigation
 import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
 import baseUrl from '../getBaseUrl';
 
-function EditResource() {
-  const { id } = useParams(); // Get resource ID from route
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: '',
-    category: '',
-    url: '',
-    image_url: '',
-    location: '',
-    description: '',
-    phone_number: '',
-    vacancies: 0,
-    hours: '',
-  });
+function EditResource({ id }) {
+  const [resource, setResource] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({});
 
-  // Fetch existing resource data
   useEffect(() => {
+    if (!id) {
+      console.error('No resource ID provided to fetch.');
+      setError('Invalid resource ID');
+      setLoading(false);
+      return;
+    }
+
     const fetchResource = async () => {
       try {
-        const token = localStorage.getItem('token');
-        const response = await axios.get(`http://${baseUrl}:3000/api/resources/${id}`, {
-          headers: {
-            Authorization: token
-          }
-        });
+        const response = await axios.get(`http://${baseUrl}:3000/api/resources/${id}`);
+        setResource(response.data);
         setFormData(response.data);
+        setLoading(false);
       } catch (error) {
-        console.error('Error fetching resource data:', error);
+        console.error('Error fetching resource:', error);
+        setError('Failed to fetch resource');
+        setLoading(false);
       }
     };
     fetchResource();
@@ -48,31 +45,108 @@ function EditResource() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(`http://${baseUrl}:3000/api/resources/${id}`, formData, {
-        headers: {
-          'Authorization': token
-        }
+        headers: { Authorization: token }
       });
-      console.log('Resource updated successfully!');
-      navigate('/my-resources'); // Redirect to My Resources after editing
+      setResource(formData);
+      setIsEditing(false);
     } catch (error) {
       console.error('Error updating resource:', error);
+      setError('Failed to update resource');
     }
   };
 
+  if (loading) return <p>Loading resource details...</p>;
+  if (error) return <p>{error}</p>;
+
   return (
-    <form onSubmit={handleSubmit}>
-         <h2>Edit Resource</h2>
-         <input type="text" name="name" value={formData.name} onChange={handleChange} required />
-         <input type="text" name="category" value={formData.category} onChange={handleChange} required />
-         <input type="text" name="url" value={formData.url} onChange={handleChange} placeholder="Resource URL" />
-         <input type="text" name="image_url" value={formData.image_url} onChange={handleChange} placeholder="Image URL" />
-         <input type="text" name="location" value={formData.location} onChange={handleChange} required />
-         <textarea name="description" value={formData.description} onChange={handleChange} required />
-         <input type="text" name="phone_number" value={formData.phone_number} onChange={handleChange} placeholder="Phone Number" />
-         <input type="number" name="vacancies" value={formData.vacancies} onChange={handleChange} placeholder="Vacancies" />
-         <input type="text" name="hours" value={formData.hours} onChange={handleChange} placeholder="Hours" />
-         <button type="submit">Update Resource</button>
-       </form>
+    <div className="rounded-lg shadow-lg hover:shadow-xl shadow-slate-300 bg-slate-100 p-2 w-full border-b-2 border-slate-300 md:border-b-0">
+      {resource ? (
+        <div className="flex flex-row md:flex-col items-start gap-4">
+          {/* Image */}
+          <img className="w-32 h-32 aspect-square md:w-full md:h-32 md:aspect-auto object-cover rounded-lg md:w-32 md:h-32 md:rounded-lg md:border-2 md:border-slate-300" src={resource.image_url} alt={resource.name} />
+
+          {/* Resource details */}
+          <div className="flex-1 w-full">
+            
+            {isEditing ? (
+              <form onSubmit={handleSubmit} className="space-y-2">
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="text"
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="text"
+                  name="url"
+                  value={formData.url}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+                <input
+                  type="text"
+                  name="phone_number"
+                  value={formData.phone_number}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="w-full p-2 border rounded"
+                />
+                <button type="submit" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                  Save
+                </button>
+                <button type="button" onClick={() => setIsEditing(false)} className="ml-2 bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400 transition">
+                  Cancel
+                </button>
+              </form>
+            ) : (
+              <>
+                <Link to={`/resource/${resource.id}`}>
+                  <h2 className="text-xl font-bold text-blue-600 hover:text-blue-800 transition-colors truncate">{resource.name}</h2>
+                </Link>
+                {resource.category && <p className="text-gray-700 mt-2 line-clamp-1 truncate md:hidden">Category: {resource.category}</p>}
+                {resource.url && (
+                  <p className="hidden md:block mt-2 line-clamp-1 truncate">
+                    Website:{' '}
+                    <a href={resource.url} target="_blank" rel="noopener noreferrer" className="text-blue-500">
+                      {resource.url}
+                    </a>
+                  </p>
+                )}
+                <p className="hidden md:block text-gray-700 line-clamp-1 truncate">Location: {resource.location}</p>
+                {resource.phone_number && <p className="hidden md:block text-gray-700 mt-2 line-clamp-1 truncate">Phone Number: {resource.phone_number}</p>}
+                <p className="text-gray-600 mt-2 line-clamp-2 text-ellipsis">{resource.description}</p>
+                {resource.email && <p className="hidden md:block text-gray-700 mt-2 line-clamp-1 truncate">Email: {resource.email}</p>}
+                <button onClick={() => setIsEditing(true)} className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
+                  Edit
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      ) : (
+        <p>No resource details available.</p>
+      )}
+    </div>
   );
 }
 

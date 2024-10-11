@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import baseUrl from '../getBaseUrl.js';
 
-function SearchForm({ 
+function ModeratorSearchForm({ 
   query, setQuery, 
   address, setAddress, 
   placeId, setPlaceId,
@@ -10,6 +10,7 @@ function SearchForm({
   selectedSubcategory, setSelectedSubcategory,
   maxDistance, setMaxDistance,
   categories,
+  status, setStatus, // Add these new props
   onSearch
 }) {
   const [places, setPlaces] = useState([]);
@@ -49,7 +50,7 @@ function SearchForm({
     <div className="grid grid-cols-5 relative">
       <input
         type="text"
-        className="p-2 border-t border-l border-slate-400 bg-slate-200 col-span-3 focus:outline-none focus:border-blue-500"
+        className="p-2 border-t border-l border-slate-400 bg-slate-200 col-span-2 focus:outline-none focus:border-blue-500"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search"
@@ -78,6 +79,18 @@ function SearchForm({
             </div>
           </div>
         )}
+      </div>
+
+      <div className="col-span-1">
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          className="p-2 border-t border-l border-slate-400 h-full w-full bg-slate-400 focus:outline-none focus:border-blue-500"
+        >
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
       </div>
 
       <div className={`${selectedCategory !== '' ? "col-span-2" : "col-span-4"} w-full`}>
@@ -114,7 +127,7 @@ function SearchForm({
           </select>
         </div>
       )}
-      
+
       <input
         type="number"
         className="p-2 border-t border-l border-slate-400 bg-slate-200 h-10 col-start-5 focus:outline-none focus:border-blue-500"
@@ -126,4 +139,4 @@ function SearchForm({
   );
 }
 
-export default SearchForm;
+export default ModeratorSearchForm;
