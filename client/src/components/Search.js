@@ -22,8 +22,6 @@ function Search() {
   const [resources, setResources] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [places, setPlaces] = useState([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
   const categories = {
@@ -140,40 +138,6 @@ function Search() {
     } finally {
       setLoading(false);
     }
-  };
-  
-
-  let typingTimer; // Declare a timer variable outside the function
-  const typingDelay = 500; // Delay in milliseconds (adjust as needed)
-
-  const handleLocationInputChange = async (e) => {
-    const inputValue = e.target.value;
-    setAddress(inputValue);
-    if (!inputValue) {
-      setShowSuggestions(false);
-      return;
-    }
-    setShowSuggestions(true);
-
-    // Clear the previous timer if the user keeps typing
-    clearTimeout(typingTimer);
-
-    // Set a new timer that will wait before making the API call
-    typingTimer = setTimeout(async () => {
-      if (inputValue) { // Ensure the input is not empty
-        const response = await axios.get(`http://${baseUrl}:3000/api/places/autocomplete`, {
-          params: { input: inputValue }
-        });
-        setPlaces(response.data);
-      }
-    }, typingDelay);
-  };
-
-  const handlePlaceClick = (place) => {
-    setPlaceId(place.place_id);
-    setAddress(place.description);
-    localStorage.setItem('address', place.description);
-    setShowSuggestions(false); // Hide suggestions when user selects one
   };
 
   const getLocation = async () => {
