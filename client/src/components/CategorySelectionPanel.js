@@ -17,7 +17,7 @@ function CategorySelectionPanel({ categories, selectedCategory, setSelectedCateg
       {internalSelectedCategory ? (
         <>
           <button
-            className="col-span-full p-2 mb-4 bg-slate-400 text-gray-700 rounded-lg shadow-md hover:bg-slate-300 transition duration-300 ease-in-out"
+            className="col-span-full p-2 bg-slate-400 text-gray-700 rounded-lg shadow-md hover:bg-slate-300 transition duration-300 ease-in-out"
             onClick={() => setInternalSelectedCategory('')}
           >
             Back to Categories
