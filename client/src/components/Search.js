@@ -11,6 +11,8 @@ function Search() {
   const storedAddress = localStorage.getItem('address');
   const storedLat = localStorage.getItem('lat');
   const storedLng = localStorage.getItem('lng');
+  const shouldAskForLocation = localStorage.getItem('shouldAskForLocation') !== 'false';
+  const [hasAskedForLocation, setHasAskedForLocation] = useState(storedAddress ? true : false);
   const [placeId, setPlaceId] = useState(storedPlaceId || '');
   const [lastPlaceId, setLastPlaceId] = useState(storedPlaceId || '');
   const [address, setAddress] = useState(storedAddress || '');
@@ -334,6 +336,29 @@ function Search() {
     }
   };
 
+  const requestUserLocation = () => {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          console.log("User location requested", position);
+          setLat(position.coords.latitude);
+          setLng(position.coords.longitude);
+          setAddress('Current Location');
+          setHasAskedForLocation(true);
+        },
+        (error) => {
+          console.error("Error getting user location:", error);
+        }
+      );
+    } else {
+      console.error("Geolocation is not supported by your browser");
+    }
+  };
+
+  const warnAboutLocation = () => {
+    alert("Search results will be limited without a location. Enter a location at any time to search nearby resources.");
+  }
+
   const getLocation = async () => {
     if (placeId !== lastPlaceId && placeId) {
       const response = await axios.get(`http://${baseUrl}:3000/api/places/location`, {
@@ -464,6 +489,37 @@ function Search() {
           onSearch={handleSearch}
         />
       </div>
+      {!hasAskedForLocation && shouldAskForLocation && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg max-w-80 w-full">
+            <p className="text-lg font-semibold mb-4 text-center">Can we access your location to show you nearby resources?</p>
+            <div className="flex flex-col space-y-3">
+              <button
+                onClick={requestUserLocation}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+              >
+                Yes, share my location
+              </button>
+              <button
+                onClick={() => setHasAskedForLocation(true)}
+                className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+              >
+                I'll enter a location manually
+              </button>
+              <button
+                onClick={() => {
+                  setHasAskedForLocation(true);
+                  localStorage.setItem('shouldAskForLocation', 'false');
+                  warnAboutLocation();
+                }}
+                className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded"
+              >
+                No, don't share my location
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
