@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import baseUrl from '../getBaseUrl';
 
@@ -7,6 +7,18 @@ function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const clearCategorySelection = () => {
+    if (location.pathname === '/') {
+      // Only clear if we're on the home page
+      navigate('/', { state: { clearCategory: true } });
+    } else {
+      // If not on home page, just navigate to home
+      navigate('/');
+    }
+    closeMenu();
+  };
 
   const handleLogout = async () => {
     try {
@@ -58,8 +70,8 @@ function Navbar() {
       <nav className="bg-slate-600 shadow-lg fixed top-0 left-0 right-0 z-50 w-full">
         <div className="w-full flex flex-col md:flex-row md:justify-between md:items-stretch">
           {/* Branding or Logo */}
-          <div className="text-white text-2xl font-bold p-4 w-full md:w-auto">
-            <Link to="/" onClick={closeMenu}>Safety.net</Link>
+          <div className="text-white text-2xl font-bold p-4 w-full md:w-auto cursor-pointer">
+            <div to="/" onClick={clearCategorySelection}>Safety.net</div>
           </div>
           
           {/* Navigation Links */}

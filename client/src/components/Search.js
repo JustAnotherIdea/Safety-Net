@@ -5,6 +5,7 @@ import SearchForm from './SearchForm.js';
 import baseUrl from '../getBaseUrl.js';
 import { debounce } from 'lodash'; // Add this import
 import CategorySelectionPanel from './CategorySelectionPanel';
+import { useLocation } from 'react-router-dom';
 
 function Search() {
   const storedPlaceId = localStorage.getItem('place_id');
@@ -26,6 +27,7 @@ function Search() {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const location = useLocation();
 
   // Updated categories object with images
   const categories = {
@@ -421,6 +423,15 @@ function Search() {
 
   // Add this function to determine if the CategorySelectionPanel should be shown
   const showCategorySelectionPanel = !selectedCategory && !query.trim();
+
+  useEffect(() => {
+    if (location.state?.clearCategory) {
+      setSelectedCategory('');
+      setSelectedSubcategory('');
+      // Clear the state to prevent clearing on subsequent renders
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   return (
     <div className="w-full mx-auto flex flex-col">
