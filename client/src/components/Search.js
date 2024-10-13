@@ -479,6 +479,11 @@ function Search() {
         {!loading && !hasMore && resources.length > 0 && (
           <p className="text-center mb-4 text-gray-600">No more resources to load.</p>
         )}
+
+        {/* No Results Message */}
+        {!loading && !hasMore && resources.length === 0 && (
+          <p className="text-center mb-4 text-gray-600">No resources found.</p>
+        )}
       </div>
 
       {/* Bottom Search Form (visible on small screens) */}
