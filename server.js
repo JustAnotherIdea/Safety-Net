@@ -588,8 +588,35 @@ app.put('/api/moderated-resources/:id/approve', cors(corsOptionsDelegate), async
   }
 });
 
-//
-app.put('')
+// Reject resource endpoint
+app.put('/api/moderated-resources/:id/reject', cors(corsOptionsDelegate), async (req, res) => {
+  const { id } = req.params;
+  const token = req.headers['authorization']?.split(' ')[1];
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+
+    // Check user's role
+    const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
+    if (userResult.rows.length === 0 || !['admin', 'moderator'].includes(userResult.rows[0].role)) {
+      return res.status(403).send('You are not authorized to reject resources'); // Forbidden
+    }
+
+    await pool.query('UPDATE moderated_resources SET status = $1 WHERE id = $2', ['rejected', id]);
+    res.sendStatus(204); // No content
+  } catch (err) {
+    // Handle JWT verification errors (invalid or expired token)
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+    }
+    // Handle any other errors as a server error
+    console.error('Error rejecting resource:', err);
+    res.status(500).send('Server error');
+  }
+});
+
 
 // Delete resource endpoint
 app.delete('/api/moderated-resources/:id', cors(corsOptionsDelegate), async (req, res) => {

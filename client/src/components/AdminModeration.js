@@ -232,7 +232,7 @@ function AdminModeration() {
 
   const handleReject = async (id) => {
     try {
-      await axios.put(`http://${baseUrl}:3000/api/resources/${id}/reject`);
+      await axios.put(`http://${baseUrl}:3000/api/moderated-resources/${id}/reject`);
       // Remove the rejected resource from the list
       setResources(prevResources => prevResources.filter(resource => resource.id !== id));
     } catch (error) {
