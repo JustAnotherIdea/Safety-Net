@@ -19,6 +19,7 @@ import MyResources from './components/MyResources';
 import ResourceDetail from './components/ResourceDetail'; // Import ResourceDetail
 import AdminUsers from './components/AdminUsers';
 import AdminModeration from './components/AdminModeration';
+import ResourceScraper from './components/ResourceScraper';
 import { ToastContainer } from 'react-toastify'; // Import ToastContainer
 import 'react-toastify/dist/ReactToastify.css'; // Import styles for notifications
 
@@ -42,6 +43,7 @@ function App() {
           <Route path="/resource/:id" element={<ResourceDetail />} />
           <Route path="/admin-users" element={<AdminUsers />} />
           <Route path="/admin-moderation" element={<AdminModeration />} />
+          <Route path="/resource-scraper" element={<ResourceScraper />} />
         </Routes>
       </div>
     </Router>

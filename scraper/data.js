@@ -85,7 +85,7 @@ const data = {
         name: "Food Stamps",
         image: "//live.staticflickr.com/943/26939457347_a214468373_m.jpg",
       },
-      { name: "Rent/Bill aid programs", image: None },
+      { name: "Rent/Bill aid programs", image: "//live.staticflickr.com/65535/52877978070_d35ffa945e_n.jpg" },
       {
         name: "Social Security",
         image: "//live.staticflickr.com/5338/29812021100_bf2d943744_n.jpg",
@@ -204,7 +204,7 @@ const data = {
         name: "Camping safety tips",
         image: "//live.staticflickr.com/7416/12179166455_0a44f86fa5_n.jpg",
       },
-      { name: "Urban camping/shelter tips", image: None },
+      { name: "Urban camping/shelter tips", image: "//live.staticflickr.com/7593/16177241864_d7ebb364c0_n.jpg" },
       {
         name: "Hitchhiking safety tips",
         image: "//live.staticflickr.com/65535/52477055552_55cfa134e5_n.jpg",
@@ -234,7 +234,7 @@ const data = {
         name: "Vaccination services",
         image: "//live.staticflickr.com/65535/49656718216_e1fc886f2e_m.jpg",
       },
-      { name: "Sexual health and contraception", image: None },
+      { name: "Sexual health and contraception", image: "//live.staticflickr.com/5268/5573784931_637afd45b6_m.jpg" },
       {
         name: "Basic first aid",
         image: "//live.staticflickr.com/65535/52665715274_78ae6522e7_m.jpg",
@@ -254,3 +254,5 @@ const data = {
     ],
   },
 };
+
+module.exports = data;

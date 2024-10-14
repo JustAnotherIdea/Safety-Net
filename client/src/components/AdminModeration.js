@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import ResourceCard from './ResourceCard.js';
 import EditResource from './EditResource.js';
 import ModSearchForm from './ModeratorSearchForm.js';
 import baseUrl from '../getBaseUrl.js';
 import { debounce } from 'lodash'; // Add this import
-import { FaCheck, FaTimes } from 'react-icons/fa'; // Add this import
+import { FaCheck, FaTimes, FaTrash } from 'react-icons/fa'; // Add this import
 
 function AdminModeration() {
   const storedPlaceId = localStorage.getItem('moderator_place_id');
   const storedAddress = localStorage.getItem('moderator_address');
   const storedLat = localStorage.getItem('moderator_lat');
   const storedLng = localStorage.getItem('moderator_lng');
+  const token = localStorage.getItem('token');
   const [placeId, setPlaceId] = useState(storedPlaceId || '');
   const [lastPlaceId, setLastPlaceId] = useState(storedPlaceId || '');
   const [address, setAddress] = useState(storedAddress || '');
@@ -19,6 +19,7 @@ function AdminModeration() {
   const [lng, setLng] = useState(storedLng || '');
   const [maxDistance, setMaxDistance] = useState(50);
   const [query, setQuery] = useState('');
+  const [categories, setCategories] = useState({});
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
   const [status, setStatus] = useState('pending');
@@ -27,83 +28,32 @@ function AdminModeration() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  const categories = {
-    "Housing": [
-      "Shelters",
-      "Low income housing",
-      "Hostels",
-      "Camping sites",
-      "Public restroom map",
-      "Public shower map",
-      "Disaster shelters"
-    ],
-    "Transportation": [
-      "Public transportation schedules and routes",
-      "Transportation apps"
-    ],
-    "Food & Water": [
-      "Soup kitchens",
-      "Food stamps",
-      "Food banks",
-      "Water fountain map",
-      "Public restroom map"
-    ],
-    "Financial Assistance": [
-      "Unemployment",
-      "Disability",
-      "Food Stamps",
-      "Rent/Bill aid programs",
-      "Social Security"
-    ],
-    "Mental Health": [
-      "Crisis hotlines",
-      "Local mental health clinics and therapists",
-      "Online counseling and therapy"
-    ],
-    "Addiction & Abuse": [
-      "Crisis hotlines",
-      "Local shelters and rehab centers",
-      "Counseling and therapy"
-    ],
-    "Legal Help & Documents": [
-      "Social Security Card",
-      "Birth certificate",
-      "ID/Drivers License",
-      "Citizenship",
-      "Legal advice",
-      "Legal aid societies"
-    ],
-    "Jobs": [
-      "Temp agencies",
-      "Job listings",
-      "Soft skills"
-    ],
-    "Education": [
-      "Free GED resources",
-      "Free educational books",
-      "Free online courses",
-      "Free certifications",
-      "Free and low cost college"
-    ],
-    "Safety Tips": [
-      "Camping safety tips",
-      "Urban camping/shelter tips",
-      "Hitchhiking safety tips"
-    ],
-    "Health & Hygiene": [
-      "Personal hygiene tips",
-      "Access to public showers",
-      "Dental care resources",
-      "Free or low-cost health clinics",
-      "Vaccination services",
-      "Sexual health and contraception",
-      "Basic first aid",
-      "Hygiene products distribution centers",
-      "Skincare and wound care",
-      "Public restroom locations"
-    ]
-  }
-  
+  const getUserRole = () => {
+    if (!token) return null;
+    try {
+      const decoded = JSON.parse(atob(token.split('.')[1])); // Decode the JWT to get user info
+      console.log("user role", decoded.role);
+      return decoded.role; // Extract role from token
+    } catch (e) {
+      console.error('Invalid token:', e);
+      return null;
+    }
+  };
+
+  const userRole = getUserRole();
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await axios.get(`http://${baseUrl}:3000/api/categories`);
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   // Add this new function to reset the search state
   const resetSearch = () => {
@@ -240,6 +190,16 @@ function AdminModeration() {
     }
   };
 
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://${baseUrl}:3000/api/resources/${id}`);
+      // Remove the deleted resource from the list
+      setResources(prevResources => prevResources.filter(resource => resource.id !== id));
+    } catch (error) {
+      console.error('Error deleting resource:', error);
+    }
+  };
+
   return (
     <div className="w-full mx-auto flex flex-col">
       {/* Top Search Form (visible on large screens) */}
@@ -285,6 +245,15 @@ function AdminModeration() {
                 >
                   <FaTimes />
                 </button>
+                {userRole === 'admin' && (
+                  <button
+                    onClick={() => handleDelete(resource.id)}
+                    className="bg-red-500 hover:bg-red-600 text-white p-2 rounded"
+                    title="Delete"
+                  >
+                    <FaTrash />
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -296,6 +265,11 @@ function AdminModeration() {
         {/* End of Resources Message */}
         {!loading && !hasMore && resources.length > 0 && (
           <p className="text-center mb-4 text-gray-600">No more resources to load.</p>
+        )}
+
+        {/* No Resources Message */}
+        {!loading && !hasMore && resources.length === 0 && (
+          <p className="text-center mb-4 text-gray-600">No resources found.</p>
         )}
       </div>
 

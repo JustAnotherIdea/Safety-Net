@@ -12,6 +12,9 @@ const multer = require('multer');
 const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
+const { spawn } = require('child_process');
+const os = require('os');
+const categoryData = require('./scraper/data.js');
 
 // Configure the AWS SDK with your credentials and region
 AWS.config.update({
@@ -62,6 +65,12 @@ pool.connect((err) => {
   } else {
     console.log('Database connected');
   }
+});
+
+// categories endpoint
+app.get('/api/categories', cors(corsOptionsDelegate), async (req, res) => {
+  res.json(categoryData);
+  console.log("categories", categoryData);
 });
 
 // Search endpoint
@@ -128,7 +137,7 @@ app.get('/api/resources', cors(corsOptionsDelegate), async (req, res) => {
 
   // Filter by subcategory
   if (subcategory && subcategory !== '') {
-    console.log("subcategory", subcategory);
+    //console.log("subcategory", subcategory);
     sqlQuery += ` AND subcategory = $${paramIndex}`;
     queryParams.push(subcategory);
     paramIndex++;
@@ -149,7 +158,7 @@ app.get('/api/resources', cors(corsOptionsDelegate), async (req, res) => {
 
   try {
     const results = await pool.query(sqlQuery, queryParams);
-    console.log('Query Results:', results.rows);
+    //console.log('Query Results:', results.rows);
     res.json(results.rows); // Return the results
   } catch (err) {
     console.error('Error fetching resources:', err);
@@ -619,7 +628,8 @@ app.put('/api/moderated-resources/:id/reject', cors(corsOptionsDelegate), async 
 
 
 // Delete resource endpoint
-app.delete('/api/moderated-resources/:id', cors(corsOptionsDelegate), async (req, res) => {
+// Might want to separate the delete for moderated and non moderated resources
+app.delete('/api/resources/:id', cors(corsOptionsDelegate), async (req, res) => {
   const { id } = req.params;
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) return res.status(401).send('Access denied');
@@ -628,13 +638,17 @@ app.delete('/api/moderated-resources/:id', cors(corsOptionsDelegate), async (req
     const verified = jwt.verify(token, SECRET_KEY);
     const userId = verified.id;
 
-    // Check user's role
+    // Check user's role and if they are the owner of the resource
     const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
-    if (userResult.rows.length === 0 || !['admin', 'moderator'].includes(userResult.rows[0].role)) {
-      return res.status(403).send('You are not authorized to delete resources'); // Forbidden
+
+    const resourceCheck = await pool.query('SELECT * FROM resources WHERE id = $1 AND user_id = $2', [id, userId]);
+
+    if ((userResult.rows.length === 0 || !['admin', 'moderator'].includes(userResult.rows[0].role)) && resourceCheck.rows.length === 0) {
+      return res.status(403).send('You are not authorized to delete this resource'); // Forbidden
     }
     
     await pool.query('DELETE FROM moderated_resources WHERE id = $1', [id]);
+    await pool.query('DELETE FROM resources WHERE id = $1', [id]);
     res.sendStatus(204); // No content
   } catch (err) {
     // Handle JWT verification errors (invalid or expired token)
@@ -707,9 +721,9 @@ app.put('/api/users/:id/role', cors(corsOptionsDelegate), async (req, res) => {
   }
 });
 
-// Delete resource endpoint
-app.delete('/api/resources/:id', cors(corsOptionsDelegate), async (req, res) => {
-  const { id } = req.params;
+// Run the resource scraper
+app.post('/api/scrape-resources', cors(corsOptionsDelegate), async (req, res) => {
+  const { location, category, subcategory, maxResults } = req.body;
 
   // Verify Authorization Token
   const token = req.headers['authorization']?.split(' ')[1];
@@ -722,30 +736,65 @@ app.delete('/api/resources/:id', cors(corsOptionsDelegate), async (req, res) => 
 
     // Check if the current user is an admin
     const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
-    if (userResult.rows.length > 0 && userResult.rows[0].role === 'admin') {
-      // Admins can delete any resource
-      await pool.query('DELETE FROM resources WHERE id = $1', [id]);
-      return res.sendStatus(204);
+    if (userResult.rows.length === 0 || userResult.rows[0].role !== 'admin') {
+      return res.status(403).send('Only admins can perform this action');
     }
 
-    // If not an admin, check if the user owns the resource
-    const resourceCheck = await pool.query('SELECT * FROM resources WHERE id = $1 AND user_id = $2', [id, userId]);
-    if (resourceCheck.rows.length === 0) {
-      return res.status(403).send('You are not authorized to delete this resource'); // Forbidden
-    }
+    // If user is admin, proceed with scraping
+    const pythonCommand = os.platform() === 'win32' ? '.\\venv\\Scripts\\python' : './venv/bin/python';
 
-    // User owns the resource, proceed to delete
-    await pool.query('DELETE FROM resources WHERE id = $1', [id]);
-    res.sendStatus(204);
+    const pythonProcess = spawn(pythonCommand, ['./scraper/resource_scraper_gui.py', location, category, subcategory, maxResults.toString()], {
+      env: { ...process.env, PYTHONPATH: process.env.PYTHONPATH },
+    });
+
+    let outputData = '';
+    let errorData = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      console.log(`Python script output: ${data}`);
+      outputData += data;
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      console.error(`Python script error: ${data}`);
+      errorData += data;
+    });
+
+    pythonProcess.on('close', (code) => {
+      console.log(`Python script exited with code ${code}`);
+      if (code === 0) {
+        console.log("outputData", outputData);
+        const resourceIds = outputData.trim().split('\n').map(Number);
+        res.json({ message: 'Scraping completed successfully', resourceIds });
+      } else {
+        res.status(500).json({ message: 'Error occurred during scraping', error: errorData });
+      }
+    });
+
+    pythonProcess.on('error', (error) => {
+      console.error(`Failed to start Python process: ${error}`);
+      res.status(500).json({ message: 'Failed to start Python process', error: error.message });
+    });
   } catch (err) {
     // Handle JWT verification errors (invalid or expired token)
     if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
-      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+      return res.status(401).send('Invalid or expired token');
     }
     // Handle any other errors as a server error
-    console.error('Error deleting resource:', err);
+    console.error('Error during resource scraping:', err);
     res.status(500).send('Server error');
   }
+});
+
+const { exec } = require('child_process');
+
+exec('.\\venv\\Scripts\\pip install python-dotenv googlemaps requests duckduckgo-search psycopg2-binary', (error, stdout, stderr) => {
+  if (error) {
+    console.error(`exec error: ${error}`);
+    return;
+  }
+  console.log(`stdout: ${stdout}`);
+  console.error(`stderr: ${stderr}`);
 });
 
 app.listen(port, '0.0.0.0', () => {

@@ -91,6 +91,7 @@ function Navbar() {
                 {(userRole === 'admin' || userRole === 'moderator') && (
                   <li className="w-full md:w-auto md:h-full"><Link to="/admin-moderation" onClick={closeMenu} className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Moderate Resources</Link></li>
                 )}
+                {userRole === 'admin' && <li className="w-full md:w-auto md:h-full"><Link to="/resource-scraper" onClick={closeMenu} className="block px-4 py-2 md:h-full md:flex md:items-center hover:bg-slate-700 w-full">Scrape Resources</Link></li>}
                 <li className="w-full md:w-auto md:h-full">
                   <div 
                     tabIndex="0"

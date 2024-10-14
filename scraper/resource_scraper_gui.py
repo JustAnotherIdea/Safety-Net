@@ -172,49 +172,20 @@ def insert_resource_into_database(resource):
         print(f"Error inserting resource into database: {e}")
         return None
 
-# GUI application
-def run_gui():
-    def on_generate():
-        location = location_entry.get()
-        category = category_entry.get()
-        subcategory = subcategory_entry.get()
-        
-        inserted_ids = search_and_format_sql(location, category, subcategory, int(max_results_entry.get()))
-        output_text.delete(1.0, tk.END)
-        for id in inserted_ids:
-            output_text.insert(tk.END, f"Inserted resource with ID: {id}\n")
+def run_scraper(location, category, subcategory, max_results):
+    inserted_ids = search_and_format_sql(location, category, subcategory, int(max_results))
+    for id in inserted_ids:
+        print(f"{id}")
 
-    app = tk.Tk()
-    app.title("Resource Scraper")
-
-    # Location input
-    tk.Label(app, text="Location:").grid(row=1, column=0)
-    location_entry = tk.Entry(app)
-    location_entry.grid(row=1, column=1)
+if __name__ == "__main__":
+    import sys
+    if len(sys.argv) != 5:
+        print("Usage: python resource_scraper_gui.py <location> <category> <subcategory> <max_results>")
+        sys.exit(1)
     
-    # Category input
-    tk.Label(app, text="Category:").grid(row=2, column=0)
-    category_entry = tk.Entry(app)
-    category_entry.grid(row=2, column=1)
+    location = sys.argv[1]
+    category = sys.argv[2]
+    subcategory = sys.argv[3]
+    max_results = sys.argv[4]
     
-    # Subcategory input
-    tk.Label(app, text="Subcategory:").grid(row=3, column=0)
-    subcategory_entry = tk.Entry(app)
-    subcategory_entry.grid(row=3, column=1)
-
-    # Maximum number of results input
-    tk.Label(app, text="Max Results:").grid(row=4, column=0)
-    max_results_entry = tk.Entry(app)
-    max_results_entry.grid(row=4, column=1)
-    
-    # Generate button
-    generate_button = tk.Button(app, text="Generate SQL", command=on_generate)
-    generate_button.grid(row=4, column=0, columnspan=2)
-    
-    # Output area
-    output_text = scrolledtext.ScrolledText(app, width=80, height=20)
-    output_text.grid(row=5, column=0, columnspan=2)
-
-    app.mainloop()
-
-run_gui()
+    run_scraper(location, category, subcategory, max_results)
