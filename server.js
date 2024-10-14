@@ -530,6 +530,9 @@ app.get('/api/moderated-resources', cors(corsOptionsDelegate), async (req, res) 
     console.log('Query Parameters:', queryParams);
 
     const results = await pool.query(sqlQuery, queryParams);
+
+    console.log('Query Results length:', results.rows.length);
+    
     res.json(results.rows);
   } catch (err) {
     if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
@@ -585,7 +588,10 @@ app.put('/api/moderated-resources/:id/approve', cors(corsOptionsDelegate), async
   }
 });
 
-// Reject resource endpoint
+//
+app.put('')
+
+// Delete resource endpoint
 app.delete('/api/moderated-resources/:id', cors(corsOptionsDelegate), async (req, res) => {
   const { id } = req.params;
   const token = req.headers['authorization']?.split(' ')[1];
@@ -598,7 +604,7 @@ app.delete('/api/moderated-resources/:id', cors(corsOptionsDelegate), async (req
     // Check user's role
     const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
     if (userResult.rows.length === 0 || !['admin', 'moderator'].includes(userResult.rows[0].role)) {
-      return res.status(403).send('You are not authorized to reject resources'); // Forbidden
+      return res.status(403).send('You are not authorized to delete resources'); // Forbidden
     }
     
     await pool.query('DELETE FROM moderated_resources WHERE id = $1', [id]);

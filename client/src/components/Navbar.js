@@ -70,8 +70,8 @@ function Navbar() {
       <nav className="bg-slate-600 shadow-lg fixed top-0 left-0 right-0 z-50 w-full">
         <div className="w-full flex flex-col md:flex-row md:justify-between md:items-stretch">
           {/* Branding or Logo */}
-          <div className="text-white text-2xl font-bold p-4 w-full md:w-auto cursor-pointer">
-            <div to="/" onClick={clearCategorySelection}>Safety.net</div>
+          <div to="/" onClick={clearCategorySelection} className="text-white text-2xl font-bold p-4 w-min md:w-auto cursor-pointer">
+            <div>Safety.net</div>
           </div>
           
           {/* Navigation Links */}

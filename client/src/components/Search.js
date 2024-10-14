@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import ResourceCard from './ResourceCard.js';
 import SearchForm from './SearchForm.js';
@@ -6,6 +6,7 @@ import baseUrl from '../getBaseUrl.js';
 import { debounce } from 'lodash'; // Add this import
 import CategorySelectionPanel from './CategorySelectionPanel';
 import { useLocation } from 'react-router-dom';
+import { FaChevronDown } from 'react-icons/fa';
 
 function Search() {
   const storedPlaceId = localStorage.getItem('place_id');
@@ -28,6 +29,8 @@ function Search() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const location = useLocation();
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const resultsRef = useRef(null);
 
   // Updated categories object with images
   const categories = {
@@ -347,6 +350,9 @@ function Search() {
           setLng(position.coords.longitude);
           setAddress('Current Location');
           setHasAskedForLocation(true);
+          localStorage.setItem('lat', position.coords.latitude);
+          localStorage.setItem('lng', position.coords.longitude);
+          localStorage.setItem('address', 'Current Location');
         },
         (error) => {
           console.error("Error getting user location:", error);
@@ -388,8 +394,23 @@ function Search() {
     fetchResources(1);
   };
 
+  // Add this function to check if content is overflowing
+  const checkOverflow = () => {
+    console.log('resultsRef', resultsRef);
+    if (resultsRef.current) {
+      const isOverflowing = resultsRef.current.scrollHeight > resultsRef.current.clientHeight;
+      console.log('isOverflowing', isOverflowing);
+      console.log('resultsRef.current', resultsRef.current);
+      return isOverflowing;
+    }
+  };
+
   // Debounced scroll handler
   const debouncedHandleScroll = debounce(() => {
+    if (window.scrollY > 0 && checkOverflow()) {
+      setShowScrollIndicator(false);
+    }
+
     if (
       window.innerHeight + document.documentElement.scrollTop + 150 >= document.documentElement.scrollHeight &&
       !loading &&
@@ -407,6 +428,11 @@ function Search() {
       debouncedHandleScroll.cancel(); // Cancel any pending debounce on unmount
     };
   }, [loading, hasMore]);
+
+  // Add this useEffect to check for overflow when resources change
+  useEffect(() => {
+    checkOverflow();
+  }, [resources]);
 
   // Modify this useEffect to reset and fetch when search parameters change
   useEffect(() => {
@@ -456,7 +482,7 @@ function Search() {
       </div>
 
       {/* Resource Results */}
-      <div className="flex-grow overflow-y-auto lg:pt-24 pb-24 lg:pb-0">
+      <div className="flex-grow overflow-y-auto lg:pt-24 pb-24 lg:pb-0 relative">
         {showCategorySelectionPanel ? (
           <CategorySelectionPanel
             categories={categories}
@@ -465,10 +491,18 @@ function Search() {
             setSelectedSubcategory={setSelectedSubcategory}
           />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 md:gap-2">
+          <div ref={resultsRef} className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 md:gap-2">
             {resources.map(resource => (
               <ResourceCard key={resource.id} id={resource.id} />
             ))}
+          </div>
+        )}
+
+        {/* Scroll down indicator */}
+        {showScrollIndicator && (
+          <div className="fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-blue-500 text-white px-4 py-2 rounded-full shadow-lg flex items-center space-x-2 animate-bounce">
+            <span>Scroll down for more</span>
+            <FaChevronDown />
           </div>
         )}
 

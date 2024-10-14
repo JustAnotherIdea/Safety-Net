@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node dev.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --env-file=.env server.js"
+    "start": "nodemon --env-file=.env server.js",
+    "scrape": "python ./scraper/resource_scraper_gui.py"
   },
   "keywords": [],
   "author": "",

@@ -5,6 +5,7 @@ import EditResource from './EditResource.js';
 import ModSearchForm from './ModeratorSearchForm.js';
 import baseUrl from '../getBaseUrl.js';
 import { debounce } from 'lodash'; // Add this import
+import { FaCheck, FaTimes } from 'react-icons/fa'; // Add this import
 
 function AdminModeration() {
   const storedPlaceId = localStorage.getItem('moderator_place_id');
@@ -20,7 +21,7 @@ function AdminModeration() {
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedSubcategory, setSelectedSubcategory] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState('pending');
   const [resources, setResources] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -133,6 +134,8 @@ function AdminModeration() {
         }
       });
 
+      console.log('Response data:', response.data);
+
       setResources(prevResources => {
         const newResources = page === 1 
           ? response.data 
@@ -196,8 +199,16 @@ function AdminModeration() {
     };
   }, [loading, hasMore]);
 
+  // Modify this useEffect to fetch resources on initial load
+  useEffect(() => {
+    resetSearch();
+    fetchResources(1);
+    console.log('Fetching resources on initial load');
+  }, []); // Empty dependency array to run only on mount
+
   // Modify this useEffect to reset and fetch when search parameters change
   useEffect(() => {
+    resetSearch();
     fetchResources(1);
   }, [query, selectedCategory, selectedSubcategory, lat, lng, maxDistance, status]);
 
@@ -208,6 +219,26 @@ function AdminModeration() {
       resetSearch();
     }
   }, [placeId, lastPlaceId]);
+
+  const handleApprove = async (id) => {
+    try {
+      await axios.put(`http://${baseUrl}:3000/api/moderated-resources/${id}/approve`);
+      // Remove the approved resource from the list
+      setResources(prevResources => prevResources.filter(resource => resource.id !== id));
+    } catch (error) {
+      console.error('Error approving resource:', error);
+    }
+  };
+
+  const handleReject = async (id) => {
+    try {
+      await axios.put(`http://${baseUrl}:3000/api/resources/${id}/reject`);
+      // Remove the rejected resource from the list
+      setResources(prevResources => prevResources.filter(resource => resource.id !== id));
+    } catch (error) {
+      console.error('Error rejecting resource:', error);
+    }
+  };
 
   return (
     <div className="w-full mx-auto flex flex-col">
@@ -237,7 +268,25 @@ function AdminModeration() {
       <div className="flex-grow overflow-y-auto lg:pt-24 pb-24 lg:pb-0">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 md:gap-2">
           {resources.map(resource => (
-            <EditResource key={resource.id} id={resource.id} />
+            <div key={resource.id} className="relative">
+              <EditResource id={resource.id} />
+              <div className="absolute bottom-2 right-2 flex space-x-2">
+                <button
+                  onClick={() => handleApprove(resource.id)}
+                  className="bg-green-500 hover:bg-green-600 text-white p-2 rounded"
+                  title="Approve"
+                >
+                  <FaCheck />
+                </button>
+                <button
+                  onClick={() => handleReject(resource.id)}
+                  className="bg-red-500 hover:bg-red-600 text-white p-2 rounded"
+                  title="Reject"
+                >
+                  <FaTimes />
+                </button>
+              </div>
+            </div>
           ))}
         </div>
 

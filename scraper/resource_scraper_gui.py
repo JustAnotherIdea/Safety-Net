@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import tkinter as tk
 from tkinter import scrolledtext
 import googlemaps
@@ -7,8 +9,18 @@ from duckduckgo_search import DDGS
 import psycopg2
 from psycopg2 import sql
 
+# Get the directory of the current script
+current_dir = os.path.dirname(os.path.abspath(__file__))
+# Get the parent directory
+parent_dir = os.path.dirname(current_dir)
+# Construct the path to the .env file
+dotenv_path = os.path.join(parent_dir, '.env')
+# Load the .env file
+load_dotenv(dotenv_path)
+
 # Function to get additional details from Google Places API
-def google_places_details(api_key, name, location):
+def google_places_details(name, location):
+    api_key = os.getenv('GOOGLE_MAPS_API_KEY')
     gmaps = googlemaps.Client(key=api_key)
     try:
         # Use Google's Places API to find place details based on name and location
@@ -63,7 +75,7 @@ def google_places_details(api_key, name, location):
         return '', 0, 0, '', json.dumps([]), '', ''
 
 # Define the function to search and return SQL statements
-def search_and_format_sql(api_key, location, category, subcategory, max_results):
+def search_and_format_sql(location, category, subcategory, max_results):
     def search_duckduckgo(location, category, subcategory, max_results):
         query = f"{subcategory} {category} {location}"
         with DDGS() as ddgs:
@@ -76,7 +88,7 @@ def search_and_format_sql(api_key, location, category, subcategory, max_results)
         description = record.get('body', '').replace("'", "''")
 
         # Retrieve additional data from Google
-        place_id, latitude, longitude, address, hours, image_url, phone_number = google_places_details(api_key, name, location)
+        place_id, latitude, longitude, address, hours, image_url, phone_number = google_places_details(name, location)
 
         if address:
             location = address
@@ -163,12 +175,11 @@ def insert_resource_into_database(resource):
 # GUI application
 def run_gui():
     def on_generate():
-        api_key = api_key_entry.get()
         location = location_entry.get()
         category = category_entry.get()
         subcategory = subcategory_entry.get()
         
-        inserted_ids = search_and_format_sql(api_key, location, category, subcategory, int(max_results_entry.get()))
+        inserted_ids = search_and_format_sql(location, category, subcategory, int(max_results_entry.get()))
         output_text.delete(1.0, tk.END)
         for id in inserted_ids:
             output_text.insert(tk.END, f"Inserted resource with ID: {id}\n")
@@ -176,11 +187,6 @@ def run_gui():
     app = tk.Tk()
     app.title("Resource Scraper")
 
-    # Google Maps API Key input
-    tk.Label(app, text="Google Maps API Key:").grid(row=0, column=0)
-    api_key_entry = tk.Entry(app, show="*")
-    api_key_entry.grid(row=0, column=1)
-    
     # Location input
     tk.Label(app, text="Location:").grid(row=1, column=0)
     location_entry = tk.Entry(app)
