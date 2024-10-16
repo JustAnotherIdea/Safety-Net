@@ -293,7 +293,8 @@ app.get('/api/places/location', cors(corsOptionsDelegate), async (req, res) => {
 
 // User registration
 app.post('/api/register', cors(corsOptionsDelegate), async (req, res) => {
-  const { name, email, password, role = 'user' } = req.body;
+  const { name, email, password } = req.body;
+  const role = 'user';
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
@@ -339,6 +340,172 @@ app.post('/api/login', cors(corsOptionsDelegate), async (req, res) => {
 app.post('/api/logout', cors(corsOptionsDelegate), (req, res) => {
   res.clearCookie('refresh_token');
   res.sendStatus(204);
+});
+
+//User profile
+app.post('/api/profile', cors(corsOptionsDelegate), async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+    const role = verified.role;
+
+    if (!role) {
+      return res.status(403).send('Role not found');
+    }
+
+    if (!userId) {
+      return res.status(403).send('User ID not found');
+    }
+
+    const result = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+    if (result.rows.length === 0) {
+      return res.status(404).send('User not found');
+    }
+
+    const user = result.rows[0];
+    res.json(user);
+  } catch (err) {
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token'); // Return 401 Unauthorized
+    }
+    console.error('Error fetching user profile:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+//User update profile
+app.post('/api/profile', cors(corsOptionsDelegate), async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+    const role = verified.role;
+
+    if (!role) {
+      return res.status(403).send('Role not found');
+    }
+
+    if (!userId) {
+      return res.status(403).send('User ID not found');
+    }
+
+    const { name, email, profile } = req.body;
+
+    const result = await pool.query(
+      'UPDATE users SET name = $1, email = $2, profile = $3 WHERE id = $4',
+      [name, email, JSON.stringify(profile), userId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).send('User not found');
+    }
+
+    res.sendStatus(200);
+  } catch (err) {
+    console.error('Error updating user profile:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+//Update password
+app.post('/api/password', cors(corsOptionsDelegate), async (req, res) => {
+  const { token, password } = req.body;
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+    if (!userId) {
+      return res.status(403).send('User ID not found');
+    }
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await pool.query('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, userId]);
+    if (result.rowCount === 0) {
+      return res.status(404).send('User not found');
+    }
+    res.status(200).send('Password updated');
+  } catch (err) {
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token');
+    }
+    console.error('Error updating password:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+//Favorite resource
+app.post('/api/favorite', cors(corsOptionsDelegate), async (req, res) => {
+  const { token } = req.body;
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+    const role = verified.role;
+
+    if (!role) {
+      return res.status(403).send('Role not found');
+    }
+
+    if (!userId) {
+      return res.status(403).send('User ID not found');
+    }
+
+    const { resourceId } = req.body;
+
+    const result = await pool.query('SELECT * FROM favorites WHERE user_id = $1 AND resource_id = $2', [userId, resourceId]);
+    if (result.rows.length > 0) {
+      return res.status(400).send('Resource already in favorites');
+    }
+
+    await pool.query('INSERT INTO favorites (user_id, resource_id) VALUES ($1, $2)', [userId, resourceId]);
+
+    res.sendStatus(200);
+  } catch (err) {
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token');
+    }
+    console.error('Error adding resource to favorites:', err);
+    res.status(500).send('Server error');
+  }
+});
+
+// Remove favorite resource
+app.delete('/api/favorites', cors(corsOptionsDelegate), async (req, res) => {
+  const { token, resourceId } = req.body;
+  if (!token) return res.status(401).send('Access denied');
+
+  try {
+    const verified = jwt.verify(token, SECRET_KEY);
+    const userId = verified.id;
+    const role = verified.role;
+
+    if (!role) {
+      return res.status(403).send('Role not found');
+    }
+
+    if (!userId) {
+      return res.status(403).send('User ID not found');
+    }
+
+    const result = await pool.query('DELETE FROM favorites WHERE user_id = $1 AND resource_id = $2', [userId, resourceId]);
+    if (result.rowCount === 0) {
+      return res.status(404).send('Resource not found in favorites');
+    }
+
+    res.sendStatus(204);
+  } catch (err) {
+    if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
+      return res.status(401).send('Invalid or expired token');
+    }
+    console.error('Error removing resource from favorites:', err);
+    res.status(500).send('Server error');
+  }
 });
 
 // Refresh Token endpoint
@@ -472,6 +639,15 @@ app.get('/api/moderated-resources', cors(corsOptionsDelegate), async (req, res) 
   if (!token) return res.status(401).send('Access denied');
 
   const { query, category, subcategory, page = 1, limit = 10, latitude, longitude, maxDistance, status = 'pending' } = req.query;
+  console.log("query", query);
+  console.log("category", category);
+  console.log("subcategory", subcategory);
+  console.log("page", page);
+  console.log("limit", limit);
+  console.log("latitude", latitude);
+  console.log("longitude", longitude);
+  console.log("maxDistance", maxDistance);
+  console.log("status", status);
 
   try {
     const verified = jwt.verify(token, SECRET_KEY);
@@ -480,6 +656,7 @@ app.get('/api/moderated-resources', cors(corsOptionsDelegate), async (req, res) 
     // Check user's role
     const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
     if (userResult.rows.length === 0 || !['admin', 'moderator'].includes(userResult.rows[0].role)) {
+      console.log("userResult", userResult);
       return res.status(403).send('You are not a moderator'); // Forbidden
     }
 

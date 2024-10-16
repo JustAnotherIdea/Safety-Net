@@ -170,6 +170,19 @@ function AdminModeration() {
     }
   }, [placeId, lastPlaceId]);
 
+  useEffect(() => {
+    if (address === '') {
+      setPlaceId('');
+      setLat('');
+      setLng('');
+      localStorage.removeItem('moderator_lat');
+      localStorage.removeItem('moderator_lng');
+      localStorage.removeItem('moderator_address');
+      localStorage.removeItem('moderator_place_id');
+      resetSearch();
+    }
+  }, [address]);
+
   const handleApprove = async (id) => {
     try {
       await axios.put(`http://${baseUrl}:3000/api/moderated-resources/${id}/approve`);

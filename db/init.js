@@ -38,6 +38,7 @@ client.connect().then(() => {
   DROP TABLE IF EXISTS resources CASCADE;
   DROP TABLE IF EXISTS moderated_resources CASCADE;
   DROP TABLE IF EXISTS users CASCADE;
+  DROP TABLE IF EXISTS favorites CASCADE;
   DROP SEQUENCE IF EXISTS resource_id_seq;
   DROP EXTENSION IF EXISTS earthdistance;
   DROP EXTENSION IF EXISTS cube;
