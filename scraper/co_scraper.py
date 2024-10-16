@@ -59,7 +59,8 @@ for link, category in zip(category_links, category_names):
 driver.quit()
 
 def process_and_insert_resource(record, category, subcategory):
-    name = record.get('name', 'No Name').replace("'", "''")
+    name = record.get('agency_name', None)
+    short_description = record.get('name', None)
     alt_name = record.get('alternate_name', '')
     url = record.get('website', '') or record.get('program_website', '') or record.get('agency_website', '') or record.get('program_site_website', '')
     url = url.replace("'", "''") if url else ''
@@ -73,7 +74,7 @@ def process_and_insert_resource(record, category, subcategory):
     postal_code = record.get('postal_code', '')
     coverage_area = record.get('coverage', '')
     description = record.get('description', '').replace("'", "''")
-    tips = record.get('tips', '').replace("'", "''")
+    tips = record.get('tips', '') or None  # Ensure tips is a string
     application_process = record.get('application_process', '').replace("'", "''")
     documents_required = record.get('documents_required', '').replace("'", "''")
     wait_list = record.get('wait_list', '')
@@ -157,6 +158,7 @@ def process_and_insert_resource(record, category, subcategory):
         'state': state,
         'postal_code': postal_code,
         'description': description,
+        'short_description': short_description,
         'tips': tips,
         'phone_numbers': json.dumps(phone_numbers_json) if phone_numbers_json else None,
         'place_id': place_id,
@@ -191,8 +193,8 @@ def process_and_insert_resource(record, category, subcategory):
 
         query = """
             INSERT INTO moderated_resources 
-            (name, alt_name, categories, url, image_url, location_name, address1, address2, city, county, state, postal_code, description, tips, phone_numbers, place_id, latitude, longitude, hours_text, services, eligibility, languages, application_process, documents_required, coverage_area, contact_info, service_fees, payment_notes, eligibility_notes, walk_in_services, wheelchair_access)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (name, alt_name, categories, url, image_url, location_name, address1, address2, city, county, state, postal_code, description, short_description, tips, phone_numbers, place_id, latitude, longitude, hours_text, services, eligibility, languages, application_process, documents_required, coverage_area, contact_info, service_fees, payment_notes, eligibility_notes, walk_in_services, wheelchair_access)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING id
         """
 
@@ -210,6 +212,7 @@ def process_and_insert_resource(record, category, subcategory):
             str(resource['state']),
             str(resource['postal_code']),
             str(resource['description']),
+            str(resource['short_description']),
             str(resource['tips']),
             str(resource['phone_numbers']),
             str(resource['place_id']),
