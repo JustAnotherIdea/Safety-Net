@@ -1,258 +1,111 @@
 const data = {
   Housing: {
-    image: "//live.staticflickr.com/2112/2383345243_b8fc22953b_n.jpg",
-    subcategories: [
-      {
-        name: "Shelters",
-        image: "//live.staticflickr.com/7326/27721389571_fc6c1bbcea_m.jpg",
-      },
-      {
-        name: "Low income housing",
-        image: "//live.staticflickr.com/65535/53049164507_8092db4dcb_n.jpg",
-      },
-      {
-        name: "Hostels",
-        image: "//live.staticflickr.com/8013/7607483132_4839eb779a_n.jpg",
-      },
-      {
-        name: "Camping sites",
-        image: "//live.staticflickr.com/6014/6015893151_044a2af184_n.jpg",
-      },
-      {
-        name: "Public restroom map",
-        image: "//live.staticflickr.com/5341/30652495321_e5cebaa3f8_m.jpg",
-      },
-      {
-        name: "Public shower map",
-        image: "//live.staticflickr.com/6114/6216946773_0c01830d0f_m.jpg",
-      },
-      {
-        name: "Disaster shelters",
-        image: "//live.staticflickr.com/8318/7947368354_3071dd9b43_n.jpg",
-      },
-    ],
+      image: 'https://images.pexels.com/photos/101808/pexels-photo-101808.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      subcategories: [
+          { name: 'Shelters', image: 'https://images.pexels.com/photos/3119909/pexels-photo-3119909.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Low income housing', image: 'https://images.pexels.com/photos/11827594/pexels-photo-11827594.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Hostels', image: 'https://images.pexels.com/photos/5137787/pexels-photo-5137787.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Camping sites', image: 'https://images.pexels.com/photos/28970008/pexels-photo-28970008/free-photo-of-historic-lookout-on-three-fingers-mountain-at-sunset.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Public restroom map', image: null },
+          { name: 'Public shower map', image: 'https://images.pexels.com/photos/28967310/pexels-photo-28967310/free-photo-of-outdoor-beach-showers-in-coastal-landscape-setting.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Disaster shelters', image: 'https://images.pexels.com/photos/1739855/pexels-photo-1739855.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
+      ]
   },
   Transportation: {
-    image: "//live.staticflickr.com/65535/53591770319_887929b975_n.jpg",
-    subcategories: [
-      {
-        name: "Public transportation schedules and routes",
-        image: "//live.staticflickr.com/65535/52534260237_ba95dc2ee3_m.jpg",
-      },
-      {
-        name: "Transportation apps",
-        image: "//live.staticflickr.com/912/40847847405_cf50e0b04d_w.jpg",
-      },
-    ],
+      image: 'https://images.pexels.com/photos/210182/pexels-photo-210182.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      subcategories: [
+          { name: 'Public transportation schedules and routes', image: 'https://images.pexels.com/photos/19805822/pexels-photo-19805822/free-photo-of-train-arriving-at-a-metro-station-in-istanbul.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Transportation apps', image: 'https://images.pexels.com/photos/6945640/pexels-photo-6945640.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
+      ]
   },
   "Food & Water": {
-    image: "//live.staticflickr.com/8462/8070604301_d2cec10042_w.jpg",
-    subcategories: [
-      {
-        name: "Soup kitchens",
-        image: "//live.staticflickr.com/7825/45987864144_aaae2bdd43_m.jpg",
-      },
-      {
-        name: "Food stamps",
-        image: "//live.staticflickr.com/943/26939457347_a214468373_m.jpg",
-      },
-      {
-        name: "Food banks",
-        image: "//live.staticflickr.com/65535/52801067992_fe83fd4842_n.jpg",
-      },
-      {
-        name: "Water fountain map",
-        image: "//live.staticflickr.com/4005/4234754391_4c40e85b1f_n.jpg",
-      },
-      {
-        name: "Public restroom map",
-        image: "//live.staticflickr.com/5341/30652495321_e5cebaa3f8_m.jpg",
-      },
-    ],
+      image: 'https://images.pexels.com/photos/28962507/pexels-photo-28962507/free-photo-of-gourmet-meal-with-sandwich-and-fries-on-marble-table.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      subcategories: [
+          { name: 'Soup kitchens', image: 'https://images.pexels.com/photos/28947809/pexels-photo-28947809/free-photo-of-cup-of-samyang-ramen-with-chopsticks.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Food stamps', image: 'https://images.pexels.com/photos/7235533/pexels-photo-7235533.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Food banks', image: 'https://images.pexels.com/photos/13983276/pexels-photo-13983276.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Water fountain map', image: 'https://images.pexels.com/photos/18189554/pexels-photo-18189554/free-photo-of-a-man-standing-in-front-of-a-fountain.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Public restroom map', image: 'https://images.pexels.com/photos/4553370/pexels-photo-4553370.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
+      ]
   },
   "Financial Assistance": {
-    image: "//live.staticflickr.com/65535/52832047906_72ec64bf18_z.jpg",
-    subcategories: [
-      {
-        name: "Unemployment",
-        image: "//live.staticflickr.com/4002/4256214353_e7460af0cc_n.jpg",
-      },
-      {
-        name: "Disability",
-        image: "//live.staticflickr.com/65535/52362887107_542e98ba24_n.jpg",
-      },
-      {
-        name: "Food Stamps",
-        image: "//live.staticflickr.com/943/26939457347_a214468373_m.jpg",
-      },
-      { name: "Rent/Bill aid programs", image: "//live.staticflickr.com/65535/52877978070_d35ffa945e_n.jpg" },
-      {
-        name: "Social Security",
-        image: "//live.staticflickr.com/5338/29812021100_bf2d943744_n.jpg",
-      },
-    ],
+      image: 'https://images.pexels.com/photos/6863250/pexels-photo-6863250.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      subcategories: [
+          { name: 'Unemployment', image: 'https://images.pexels.com/photos/897817/pexels-photo-897817.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Disability', image: 'https://images.pexels.com/photos/2026764/pexels-photo-2026764.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Food Stamps', image: 'https://images.pexels.com/photos/7235533/pexels-photo-7235533.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Rent/Bill aid programs', image: null },
+          { name: 'Social Security', image: 'https://images.pexels.com/photos/60504/security-protection-anti-virus-software-60504.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
+      ]
   },
   "Mental Health": {
-    image: "//live.staticflickr.com/65535/53681572206_e3485c637a_m.jpg",
-    subcategories: [
-      {
-        name: "Crisis hotlines",
-        image: "//live.staticflickr.com/2171/2112091061_2da624775e_n.jpg",
-      },
-      {
-        name: "Local mental health clinics and therapists",
-        image: "//live.staticflickr.com/8630/16610445876_5c1a5e1f06_n.jpg",
-      },
-      {
-        name: "Online counseling and therapy",
-        image: "//live.staticflickr.com/65535/51201285407_b08558c260_w.jpg",
-      },
-    ],
+      image: 'https://images.pexels.com/photos/3693078/pexels-photo-3693078.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      subcategories: [
+          { name: 'Crisis hotlines', image: 'https://images.pexels.com/photos/6034773/pexels-photo-6034773.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Local mental health clinics and therapists', image: 'https://images.pexels.com/photos/7176029/pexels-photo-7176029.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Online counseling and therapy', image: 'https://images.pexels.com/photos/3958401/pexels-photo-3958401.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
+      ]
   },
   "Addiction & Abuse": {
-    image: "//live.staticflickr.com/6038/5910818468_e4cf4f4fb7_w.jpg",
-    subcategories: [
-      {
-        name: "Crisis hotlines",
-        image: "//live.staticflickr.com/2171/2112091061_2da624775e_n.jpg",
-      },
-      {
-        name: "Local shelters and rehab centers",
-        image: "//live.staticflickr.com/65535/50787988992_dcdf8f72a3_n.jpg",
-      },
-      {
-        name: "Counseling and therapy",
-        image: "//live.staticflickr.com/65535/52376375475_2b9042cf9d_m.jpg",
-      },
-    ],
+      image: 'https://images.pexels.com/photos/7230218/pexels-photo-7230218.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      subcategories: [
+          { name: 'Crisis hotlines', image: 'https://images.pexels.com/photos/6034773/pexels-photo-6034773.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Local shelters and rehab centers', image: 'https://images.pexels.com/photos/9181646/pexels-photo-9181646.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Counseling and therapy', image: 'https://images.pexels.com/photos/4101143/pexels-photo-4101143.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
+      ]
   },
   "Legal Help & Documents": {
-    image: "//live.staticflickr.com/65535/51864016811_be172a0cd2_m.jpg",
-    subcategories: [
-      {
-        name: "Social Security Card",
-        image: "//live.staticflickr.com/3/3848594_8924c93815_w.jpg",
-      },
-      {
-        name: "Birth certificate",
-        image: "//live.staticflickr.com/1197/928906024_11dc2afd46_n.jpg",
-      },
-      {
-        name: "ID/Drivers License",
-        image: "//live.staticflickr.com/7892/46288753184_426530f83f_n.jpg",
-      },
-      {
-        name: "Citizenship",
-        image: "//live.staticflickr.com/5288/5310808377_f9551f01fb_n.jpg",
-      },
-      {
-        name: "Legal advice",
-        image: "//live.staticflickr.com/65535/52356721552_3efb63b4aa.jpg",
-      },
-      {
-        name: "Legal aid societies",
-        image: "//live.staticflickr.com/3830/10859786764_9c0cde83e4_n.jpg",
-      },
-    ],
+      image: 'https://images.pexels.com/photos/7681194/pexels-photo-7681194.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      subcategories: [
+          { name: 'Social Security Card', image: 'https://images.pexels.com/photos/7621127/pexels-photo-7621127.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Birth certificate', image: 'https://images.pexels.com/photos/4005611/pexels-photo-4005611.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'ID/Drivers License', image: null },
+          { name: 'Citizenship', image: 'https://images.pexels.com/photos/5926258/pexels-photo-5926258.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Legal advice', image: 'https://images.pexels.com/photos/6077123/pexels-photo-6077123.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Legal aid societies', image: 'https://images.pexels.com/photos/6077476/pexels-photo-6077476.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
+      ]
   },
   Jobs: {
-    image: "//live.staticflickr.com/1111/1484372740_22b48325b9_m.jpg",
-    subcategories: [
-      {
-        name: "Temp agencies",
-        image: "//live.staticflickr.com/65535/52774157001_61a80dd68c_m.jpg",
-      },
-      {
-        name: "Job listings",
-        image: "//live.staticflickr.com/65535/53172638873_0877f0bc06_m.jpg",
-      },
-      {
-        name: "Soft skills",
-        image: "//live.staticflickr.com/65535/52614400046_9aca07a91a_n.jpg",
-      },
-    ],
+      image: 'https://images.pexels.com/photos/327540/pexels-photo-327540.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      subcategories: [
+          { name: 'Temp agencies', image: 'https://images.pexels.com/photos/5656745/pexels-photo-5656745.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Job listings', image: 'https://images.pexels.com/photos/9841351/pexels-photo-9841351.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Soft skills', image: 'https://images.pexels.com/photos/19915776/pexels-photo-19915776/free-photo-of-woman-sitting-on-a-sofa-with-a-laptop-displaying-a-chart.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
+      ]
   },
   Education: {
-    image: "//live.staticflickr.com/2770/4416748636_8971bf19e9_m.jpg",
-    subcategories: [
-      {
-        name: "Free GED resources",
-        image: "//live.staticflickr.com/3734/11933904525_119637bf5a_n.jpg",
-      },
-      {
-        name: "Free educational books",
-        image: "//live.staticflickr.com/5276/7366056244_17ce58b840_m.jpg",
-      },
-      {
-        name: "Free online courses",
-        image: "//live.staticflickr.com/4414/36467923735_7fe7afa6cf_n.jpg",
-      },
-      {
-        name: "Free certifications",
-        image: "//live.staticflickr.com/65535/50202174002_1b8802ef57_z.jpg",
-      },
-      {
-        name: "Free and low cost college",
-        image: "//live.staticflickr.com/2300/1627274068_b954364e25_n.jpg",
-      },
-    ],
+      image: 'https://images.pexels.com/photos/301926/pexels-photo-301926.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      subcategories: [
+          { name: 'Free GED resources', image: 'https://images.pexels.com/photos/6546413/pexels-photo-6546413.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Free educational books', image: 'https://images.pexels.com/photos/6041281/pexels-photo-6041281.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Free online courses', image: 'https://images.pexels.com/photos/4012966/pexels-photo-4012966.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Free certifications', image: 'https://images.pexels.com/photos/28927320/pexels-photo-28927320/free-photo-of-majestic-seagull-in-flight-against-clear-sky.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Free and low cost college', image: 'https://images.pexels.com/photos/5965930/pexels-photo-5965930.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
+      ]
   },
   "Safety Tips": {
-    image: "//live.staticflickr.com/8307/7774708322_e4da39c347_n.jpg",
-    subcategories: [
-      {
-        name: "Camping safety tips",
-        image: "//live.staticflickr.com/7416/12179166455_0a44f86fa5_n.jpg",
-      },
-      { name: "Urban camping/shelter tips", image: "//live.staticflickr.com/7593/16177241864_d7ebb364c0_n.jpg" },
-      {
-        name: "Hitchhiking safety tips",
-        image: "//live.staticflickr.com/65535/52477055552_55cfa134e5_n.jpg",
-      },
-    ],
+      image: 'https://images.pexels.com/photos/5245929/pexels-photo-5245929.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      subcategories: [
+          { name: 'Camping safety tips', image: 'https://images.pexels.com/photos/12749404/pexels-photo-12749404.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Urban camping/shelter tips', image: null },
+          { name: 'Hitchhiking safety tips', image: 'https://images.pexels.com/photos/8213107/pexels-photo-8213107.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
+      ]
   },
   "Health & Hygiene": {
-    image: "//live.staticflickr.com/7027/6416588283_d11b94a5de.jpg",
-    subcategories: [
-      {
-        name: "Personal hygiene tips",
-        image: "//live.staticflickr.com/876/42007904695_0b1ec9da9a_w.jpg",
-      },
-      {
-        name: "Access to public showers",
-        image: "//live.staticflickr.com/3086/2793381864_cc4921f2b7_m.jpg",
-      },
-      {
-        name: "Dental care resources",
-        image: "//live.staticflickr.com/65535/51547367964_260f1a2d4f_n.jpg",
-      },
-      {
-        name: "Free or low-cost health clinics",
-        image: "//live.staticflickr.com/65535/52442511858_56a1263266_m.jpg",
-      },
-      {
-        name: "Vaccination services",
-        image: "//live.staticflickr.com/65535/49656718216_e1fc886f2e_m.jpg",
-      },
-      { name: "Sexual health and contraception", image: "//live.staticflickr.com/5268/5573784931_637afd45b6_m.jpg" },
-      {
-        name: "Basic first aid",
-        image: "//live.staticflickr.com/65535/52665715274_78ae6522e7_m.jpg",
-      },
-      {
-        name: "Hygiene products distribution centers",
-        image: "//live.staticflickr.com/2567/4073925640_7ac1c64db3_n.jpg",
-      },
-      {
-        name: "Skincare and wound care",
-        image: "//live.staticflickr.com/65535/52467115869_e95aaaef63_w.jpg",
-      },
-      {
-        name: "Public restroom locations",
-        image: "//live.staticflickr.com/65535/29552246896_696ef4f67d_n.jpg",
-      },
-    ],
-  },
+      image: 'https://images.pexels.com/photos/28861615/pexels-photo-28861615/free-photo-of-hand-holding-cleansing-oil-dispenser-in-minimalist-setting.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      subcategories: [
+          { name: 'Personal hygiene tips', image: 'https://images.pexels.com/photos/9832130/pexels-photo-9832130.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Access to public showers', image: 'https://images.pexels.com/photos/28967310/pexels-photo-28967310/free-photo-of-outdoor-beach-showers-in-coastal-landscape-setting.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Dental care resources', image: 'https://images.pexels.com/photos/287227/pexels-photo-287227.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Free or low-cost health clinics', image: 'https://images.pexels.com/photos/16450237/pexels-photo-16450237/free-photo-of-an-ecg-paper-on-a-table-with-a-heart-monitor.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Vaccination services', image: 'https://images.pexels.com/photos/3786215/pexels-photo-3786215.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Sexual health and contraception', image: 'https://images.pexels.com/photos/3787097/pexels-photo-3787097.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Basic first aid', image: 'https://images.pexels.com/photos/11826942/pexels-photo-11826942.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Hygiene products distribution centers', image: 'https://images.pexels.com/photos/7106731/pexels-photo-7106731.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Skincare and wound care', image: 'https://images.pexels.com/photos/7588647/pexels-photo-7588647.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Public restroom locations', image: 'https://images.pexels.com/photos/5527559/pexels-photo-5527559.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
+      ]
+  }
 };
 
 module.exports = data;

@@ -1,5 +1,13 @@
 from bs4 import BeautifulSoup
 import requests
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
+import time
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
 categories_data = {
     "Housing": {
@@ -113,19 +121,40 @@ categories_data = {
 
 
 def search_flickr(query):
-    # Example search URL: Modify according to Flickr's search result patter
-    url = f"https://www.flickr.com/search/?text={query}"
+    # Set up Selenium with Chrome
+    chrome_options = Options()
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
 
-    # Fetch the search results from Flickr
-    response = requests.get(url)
-    soup = BeautifulSoup(response.content, 'html.parser')
+    # Automatically manage ChromeDriver
+    service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service, options=chrome_options)
 
-    # Find images in the HTML content. This selector will need customization based on actual Flickr HTML structure.
-    images = soup.find_all('img')  # This is a placeholder; adjust the CSS class or tag as needed
+    try:
+        url = f"https://www.pexels.com/search/{query}/"
+        print(url)
+        driver.get(url)
 
-    # Extract and return the first image URL found
-    if images:
-        return images[0]['src'] # Change index or selector depending on actual requirements
+        # Wait for a specific element that indicates the page is loaded
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'MediaCard_image__yVXRE'))  # Adjust this selector based on the page structure
+        )
+
+        # Find images using Selenium
+        images = driver.find_elements(By.CLASS_NAME, 'MediaCard_image__yVXRE')  # Adjust this selector based on the page structure
+        print(f"Found {len(images)} images")
+
+        # Extract and return the first image URL found
+        if images:
+            image_url = images[0].get_attribute('src')
+            print(f"Image URL: {image_url}")
+            return image_url
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+
+    finally:
+        driver.quit()
 
     return None
 
