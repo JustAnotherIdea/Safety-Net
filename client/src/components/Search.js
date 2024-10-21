@@ -232,7 +232,7 @@ function Search() {
       </div>
 
       {/* Resource Results */}
-      <div className="flex-grow overflow-y-auto lg:pt-24 pb-24 lg:pb-0 relative">
+      <div className="flex-grow overflow-y-auto lg:pt-20 pb-24 lg:pb-0 relative">
         {showCategorySelectionPanel ? (
           <CategorySelectionPanel
             categories={categories}
