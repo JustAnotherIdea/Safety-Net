@@ -1,6 +1,6 @@
 const data = {
   "Housing": {
-      image: 'https://images.pexels.com/photos/101808/pexels-photo-101808.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      image: '',
       subcategories: [
           { name: 'Shelters', image: 'https://images.pexels.com/photos/3119909/pexels-photo-3119909.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
           { name: 'Low income housing', image: 'https://images.pexels.com/photos/11827594/pexels-photo-11827594.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
