@@ -144,7 +144,7 @@ function Navbar() {
           </button>
         </div>
       </nav>
-      <div className="h-16 md:h-20"></div> {/* Spacer div */}
+      <div className="h-16"></div> {/* Spacer div */}
     </>
   );
 }

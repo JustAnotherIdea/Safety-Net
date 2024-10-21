@@ -1601,6 +1601,14 @@ video {
   .lg\:pt-24 {
     padding-top: 6rem;
   }
+
+  .lg\:pt-20 {
+    padding-top: 5rem;
+  }
+
+  .lg\:pt-16 {
+    padding-top: 4rem;
+  }
 }
 
 @media (min-width: 1280px) {
