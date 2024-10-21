@@ -1,5 +1,5 @@
 const data = {
-  Housing: {
+  "Housing": {
       image: 'https://images.pexels.com/photos/101808/pexels-photo-101808.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
       subcategories: [
           { name: 'Shelters', image: 'https://images.pexels.com/photos/3119909/pexels-photo-3119909.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
@@ -11,7 +11,7 @@ const data = {
           { name: 'Disaster shelters', image: 'https://images.pexels.com/photos/1739855/pexels-photo-1739855.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
       ]
   },
-  Transportation: {
+  "Transportation": {
       image: 'https://images.pexels.com/photos/210182/pexels-photo-210182.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
       subcategories: [
           { name: 'Public transportation schedules and routes', image: 'https://images.pexels.com/photos/19805822/pexels-photo-19805822/free-photo-of-train-arriving-at-a-metro-station-in-istanbul.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
@@ -39,18 +39,26 @@ const data = {
       ]
   },
   "Mental Health": {
-      image: 'https://images.pexels.com/photos/3693078/pexels-photo-3693078.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+      image: 'https://images.pexels.com/photos/28965920/pexels-photo-28965920/free-photo-of-contemplative-woman-in-nature-by-a-stream.jpeg?auto=compress&cs=tinysrgb&w=1260&dpr=1&w=500',
       subcategories: [
           { name: 'Crisis hotlines', image: 'https://images.pexels.com/photos/6034773/pexels-photo-6034773.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
           { name: 'Local mental health clinics and therapists', image: 'https://images.pexels.com/photos/7176029/pexels-photo-7176029.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
           { name: 'Online counseling and therapy', image: 'https://images.pexels.com/photos/3958401/pexels-photo-3958401.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
       ]
   },
-  "Addiction & Abuse": {
-      image: 'https://images.pexels.com/photos/7230218/pexels-photo-7230218.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+  "Addiction": {
+      image: 'https://safety-net-images.s3.amazonaws.com/iStock-1203163873.jpg',
       subcategories: [
           { name: 'Crisis hotlines', image: 'https://images.pexels.com/photos/6034773/pexels-photo-6034773.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
           { name: 'Local shelters and rehab centers', image: 'https://images.pexels.com/photos/9181646/pexels-photo-9181646.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Counseling and therapy', image: 'https://images.pexels.com/photos/4101143/pexels-photo-4101143.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
+      ]
+  },
+  "Abuse": {
+      image: 'https://images.pexels.com/photos/7699321/pexels-photo-7699321.jpeg?auto=compress&cs=tinysrgb&w=500',
+      subcategories: [
+          { name: 'Crisis hotlines', image: 'https://images.pexels.com/photos/6034773/pexels-photo-6034773.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
+          { name: 'Local shelters', image: 'https://images.pexels.com/photos/9181646/pexels-photo-9181646.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
           { name: 'Counseling and therapy', image: 'https://images.pexels.com/photos/4101143/pexels-photo-4101143.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
       ]
   },
@@ -65,7 +73,7 @@ const data = {
           { name: 'Legal aid societies', image: 'https://images.pexels.com/photos/6077476/pexels-photo-6077476.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
       ]
   },
-  Jobs: {
+  "Jobs": {
       image: 'https://images.pexels.com/photos/327540/pexels-photo-327540.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
       subcategories: [
           { name: 'Temp agencies', image: 'https://images.pexels.com/photos/5656745/pexels-photo-5656745.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
@@ -73,8 +81,8 @@ const data = {
           { name: 'Soft skills', image: 'https://images.pexels.com/photos/19915776/pexels-photo-19915776/free-photo-of-woman-sitting-on-a-sofa-with-a-laptop-displaying-a-chart.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' }
       ]
   },
-  Education: {
-      image: 'https://images.pexels.com/photos/301926/pexels-photo-301926.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500',
+  "Education": {
+      image: 'https://images.pexels.com/photos/159866/books-book-pages-read-literature-159866.jpeg?auto=compress&cs=tinysrgb&w=600',
       subcategories: [
           { name: 'Free GED resources', image: 'https://images.pexels.com/photos/6546413/pexels-photo-6546413.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
           { name: 'Free educational books', image: 'https://images.pexels.com/photos/6041281/pexels-photo-6041281.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500' },
