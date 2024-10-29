@@ -752,6 +752,17 @@ app.put('/api/moderated-resources/:id/approve', cors(corsOptionsDelegate), async
 
     const resource = result.rows[0];
 
+    // Ensure JSON fields are properly formatted
+    const categories = typeof resource.categories === 'string' ? JSON.parse(resource.categories) : resource.categories;
+    const services = typeof resource.services === 'string' ? JSON.parse(resource.services) : resource.services;
+    const phone_numbers = typeof resource.phone_numbers === 'string' ? JSON.parse(resource.phone_numbers) : resource.phone_numbers;
+    const hours = typeof resource.hours === 'string' ? JSON.parse(resource.hours) : resource.hours;
+    const eligibility = typeof resource.eligibility === 'string' ? JSON.parse(resource.eligibility) : resource.eligibility;
+    const special_eligibility = typeof resource.special_eligibility === 'string' ? JSON.parse(resource.special_eligibility) : resource.special_eligibility;
+    const accessibility_features = typeof resource.accessibility_features === 'string' ? JSON.parse(resource.accessibility_features) : resource.accessibility_features;
+    const contact_info = typeof resource.contact_info === 'string' ? JSON.parse(resource.contact_info) : resource.contact_info;
+    const recommendation_matrix = typeof resource.recommendation_matrix === 'string' ? JSON.parse(resource.recommendation_matrix) : resource.recommendation_matrix;
+
     // Insert the resource into the resources table, maintaining the same ID
     await pool.query(
       `INSERT INTO resources (
@@ -760,7 +771,7 @@ app.put('/api/moderated-resources/:id/approve', cors(corsOptionsDelegate), async
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, $57
       )`,
       [
-        resource.id, resource.name, resource.alt_name, JSON.parse(resource.categories), JSON.parse(resource.services), resource.resource_type, resource.url, resource.image_url, resource.location_name, resource.address1, resource.address2, resource.city, resource.county, resource.state, resource.postal_code, resource.coverage_area, resource.description, resource.short_description, resource.tips, resource.application_process, resource.documents_required, JSON.parse(resource.phone_numbers), resource.vacancies, resource.capacity, resource.wait_list, resource.wait_time, JSON.parse(resource.hours), resource.hours_text, resource.rating, resource.user_id, resource.owner_id, resource.last_modified, resource.last_moderator_id, resource.moderator_ids, resource.last_verified, resource.verification_source, resource.transportation_options, resource.place_id, resource.latitude, resource.longitude, resource.service_fees, resource.payment_notes, JSON.parse(resource.eligibility), resource.eligibility_notes, JSON.parse(resource.special_eligibility), resource.special_eligibility_notes, resource.languages, resource.housing_type, resource.wheelchair_access, JSON.parse(resource.accessibility_features), resource.crisis_services, resource.walk_in_services, resource.appointment_required, JSON.parse(resource.contact_info), JSON.parse(resource.recommendation_matrix), 'approved', resource.created_at
+        resource.id, resource.name, resource.alt_name, categories, services, resource.resource_type, resource.url, resource.image_url, resource.location_name, resource.address1, resource.address2, resource.city, resource.county, resource.state, resource.postal_code, resource.coverage_area, resource.description, resource.short_description, resource.tips, resource.application_process, resource.documents_required, phone_numbers, resource.vacancies, resource.capacity, resource.wait_list, resource.wait_time, hours, resource.hours_text, resource.rating, resource.user_id, resource.owner_id, resource.last_modified, resource.last_moderator_id, resource.moderator_ids, resource.last_verified, resource.verification_source, resource.transportation_options, resource.place_id, resource.latitude, resource.longitude, resource.service_fees, resource.payment_notes, eligibility, resource.eligibility_notes, special_eligibility, resource.special_eligibility_notes, resource.languages, resource.housing_type, resource.wheelchair_access, accessibility_features, resource.crisis_services, resource.walk_in_services, resource.appointment_required, contact_info, recommendation_matrix, 'approved', resource.created_at
       ]
     );
 
