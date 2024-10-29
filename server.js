@@ -750,13 +750,18 @@ app.put('/api/moderated-resources/:id/approve', cors(corsOptionsDelegate), async
       return res.status(404).send('Resource not found');
     }
 
-    const { name, category, subcategory, url, image_url, location, description, user_id, phone_number, vacancies, hours, latitude, longitude, place_id } = result.rows[0];
-    console.log("subcategory", subcategory);
+    const resource = result.rows[0];
 
     // Insert the resource into the resources table, maintaining the same ID
     await pool.query(
-      'INSERT INTO resources (id, name, category, subcategory, url, image_url, location, description, phone_number, vacancies, hours, user_id, status, latitude, longitude, place_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)',
-      [id, name, category, subcategory, url, image_url, location, description, phone_number, vacancies, JSON.stringify(hours), user_id, 'approved', latitude, longitude, place_id]
+      `INSERT INTO resources (
+        id, name, alt_name, categories, services, resource_type, url, image_url, location_name, address1, address2, city, county, state, postal_code, coverage_area, description, short_description, tips, application_process, documents_required, phone_numbers, vacancies, capacity, wait_list, wait_time, hours, hours_text, rating, user_id, owner_id, last_modified, last_moderator_id, moderator_ids, last_verified, verification_source, transportation_options, place_id, latitude, longitude, service_fees, payment_notes, eligibility, eligibility_notes, special_eligibility, special_eligibility_notes, languages, housing_type, wheelchair_access, accessibility_features, crisis_services, walk_in_services, appointment_required, contact_info, recommendation_matrix, status, created_at
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, $30, $31, $32, $33, $34, $35, $36, $37, $38, $39, $40, $41, $42, $43, $44, $45, $46, $47, $48, $49, $50, $51, $52, $53, $54, $55, $56, $57, $58
+      )`,
+      [
+        resource.id, resource.name, resource.alt_name, resource.categories, resource.services, resource.resource_type, resource.url, resource.image_url, resource.location_name, resource.address1, resource.address2, resource.city, resource.county, resource.state, resource.postal_code, resource.coverage_area, resource.description, resource.short_description, resource.tips, resource.application_process, resource.documents_required, resource.phone_numbers, resource.vacancies, resource.capacity, resource.wait_list, resource.wait_time, resource.hours, resource.hours_text, resource.rating, resource.user_id, resource.owner_id, resource.last_modified, resource.last_moderator_id, resource.moderator_ids, resource.last_verified, resource.verification_source, resource.transportation_options, resource.place_id, resource.latitude, resource.longitude, resource.service_fees, resource.payment_notes, resource.eligibility, resource.eligibility_notes, resource.special_eligibility, resource.special_eligibility_notes, resource.languages, resource.housing_type, resource.wheelchair_access, resource.accessibility_features, resource.crisis_services, resource.walk_in_services, resource.appointment_required, resource.contact_info, resource.recommendation_matrix, 'approved', resource.created_at
+      ]
     );
 
     // Update moderation status
