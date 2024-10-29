@@ -752,16 +752,25 @@ app.put('/api/moderated-resources/:id/approve', cors(corsOptionsDelegate), async
 
     const resource = result.rows[0];
 
+    // Log the problematic field for debugging
+    console.log('Categories before parsing:', resource.categories);
+
     // Ensure JSON fields are properly formatted
-    const categories = typeof resource.categories === 'string' ? JSON.parse(resource.categories) : resource.categories;
-    const services = typeof resource.services === 'string' ? JSON.parse(resource.services) : resource.services;
-    const phone_numbers = typeof resource.phone_numbers === 'string' ? JSON.parse(resource.phone_numbers) : resource.phone_numbers;
-    const hours = typeof resource.hours === 'string' ? JSON.parse(resource.hours) : resource.hours;
-    const eligibility = typeof resource.eligibility === 'string' ? JSON.parse(resource.eligibility) : resource.eligibility;
-    const special_eligibility = typeof resource.special_eligibility === 'string' ? JSON.parse(resource.special_eligibility) : resource.special_eligibility;
-    const accessibility_features = typeof resource.accessibility_features === 'string' ? JSON.parse(resource.accessibility_features) : resource.accessibility_features;
-    const contact_info = typeof resource.contact_info === 'string' ? JSON.parse(resource.contact_info) : resource.contact_info;
-    const recommendation_matrix = typeof resource.recommendation_matrix === 'string' ? JSON.parse(resource.recommendation_matrix) : resource.recommendation_matrix;
+    let categories, services, phone_numbers, hours, eligibility, special_eligibility, accessibility_features, contact_info, recommendation_matrix;
+    try {
+      categories = typeof resource.categories === 'string' ? JSON.parse(resource.categories) : resource.categories;
+      services = typeof resource.services === 'string' ? JSON.parse(resource.services) : resource.services;
+      phone_numbers = typeof resource.phone_numbers === 'string' ? JSON.parse(resource.phone_numbers) : resource.phone_numbers;
+      hours = typeof resource.hours === 'string' ? JSON.parse(resource.hours) : resource.hours;
+      eligibility = typeof resource.eligibility === 'string' ? JSON.parse(resource.eligibility) : resource.eligibility;
+      special_eligibility = typeof resource.special_eligibility === 'string' ? JSON.parse(resource.special_eligibility) : resource.special_eligibility;
+      accessibility_features = typeof resource.accessibility_features === 'string' ? JSON.parse(resource.accessibility_features) : resource.accessibility_features;
+      contact_info = typeof resource.contact_info === 'string' ? JSON.parse(resource.contact_info) : resource.contact_info;
+      recommendation_matrix = typeof resource.recommendation_matrix === 'string' ? JSON.parse(resource.recommendation_matrix) : resource.recommendation_matrix;
+    } catch (parseError) {
+      console.error('Error parsing JSON fields:', parseError);
+      return res.status(400).send('Invalid JSON format in resource data');
+    }
 
     // Insert the resource into the resources table, maintaining the same ID
     await pool.query(
