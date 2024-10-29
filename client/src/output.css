@@ -1453,10 +1453,6 @@ video {
     aspect-ratio: auto;
   }
 
-  .md\:h-20 {
-    height: 5rem;
-  }
-
   .md\:h-32 {
     height: 8rem;
   }
@@ -1598,16 +1594,12 @@ video {
     padding-bottom: 0px;
   }
 
-  .lg\:pt-24 {
-    padding-top: 6rem;
-  }
-
   .lg\:pt-20 {
     padding-top: 5rem;
   }
 
-  .lg\:pt-16 {
-    padding-top: 4rem;
+  .lg\:pt-24 {
+    padding-top: 6rem;
   }
 }
 
