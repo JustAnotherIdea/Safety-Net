@@ -758,7 +758,7 @@ app.put('/api/moderated-resources/:id/approve', cors(corsOptionsDelegate), async
     // Ensure JSON fields are properly formatted
     let categories, services, phone_numbers, hours, eligibility, special_eligibility, accessibility_features, contact_info, recommendation_matrix;
     try {
-      categories = typeof resource.categories === 'string' ? JSON.parse(resource.categories) : resource.categories;
+      categories = Array.isArray(resource.categories) ? JSON.stringify(resource.categories) : resource.categories;
       services = typeof resource.services === 'string' ? JSON.parse(resource.services) : resource.services;
       phone_numbers = typeof resource.phone_numbers === 'string' ? JSON.parse(resource.phone_numbers) : resource.phone_numbers;
       hours = typeof resource.hours === 'string' ? JSON.parse(resource.hours) : resource.hours;
