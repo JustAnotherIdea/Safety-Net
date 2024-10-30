@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom'; // Import Link for navigation
+import DOMPurify from 'dompurify';
 import axios from 'axios';
 import baseUrl from '../getBaseUrl';
 import { FaEdit } from "react-icons/fa";
@@ -135,7 +136,7 @@ function EditResource({ id }) {
                 )}
                 <p className="block text-gray-700 line-clamp-1 truncate">Location: {resource.location}</p>
                 {resource.phone_number && <p className="block text-gray-700 mt-2 line-clamp-1 truncate">Phone Number: {resource.phone_number}</p>}
-                <p className="text-gray-600 mt-2 line-clamp-2 text-ellipsis" dangerouslySetInnerHTML={{ __html: resource.description }}></p>
+                <p className="text-gray-600 mt-2 line-clamp-2 text-ellipsis" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(resource.description) }}></p>
                 {resource.email && <p className="block text-gray-700 mt-2 line-clamp-1 truncate">Email: {resource.email}</p>}
                 <button onClick={() => setIsEditing(true)} className="mt-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded transition">
                   <FaEdit />

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom'; // Import Link for navigation
 import axios from 'axios';
 import baseUrl from '../getBaseUrl';
-
+import DOMPurify from 'dompurify';
 function ResourceCard({ id }) {
   const [resource, setResource] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -56,7 +56,7 @@ function ResourceCard({ id }) {
             )}
             <p className="hidden md:block text-gray-700 line-clamp-1 truncate">Location: {resource.location}</p>
             {resource.phone_number && <p className="hidden md:block text-gray-700 mt-2 line-clamp-1 truncate">Phone Number: {resource.phone_number}</p>}
-            <p className="text-gray-600 mt-2 line-clamp-2 text-ellipsis" dangerouslySetInnerHTML={{ __html: resource.description }}></p>
+            <p className="text-gray-600 mt-2 line-clamp-2 text-ellipsis" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(resource.description) }}></p>
             {resource.email && <p className="hidden md:block text-gray-700 mt-2 line-clamp-1 truncate">Email: {resource.email}</p>}
           </div>
         </div>

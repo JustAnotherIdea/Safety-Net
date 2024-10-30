@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import DOMPurify from 'dompurify';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import OpeningHoursDisplay from './OpeningHoursDisplay';
@@ -106,7 +107,7 @@ function ResourceDetail() {
           <h2 className="text-3xl font-bold mb-4">{resource.name}</h2>
           <p className="text-lg text-gray-700 mb-2">Category: {resource.category}</p>
           <p className="text-lg text-gray-700 mb-2">Location: {resource.location}</p>
-          <p className="text-gray-600 mb-4" dangerouslySetInnerHTML={{ __html: resource.description }}></p>
+          <p className="text-gray-600 mb-4" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(resource.description) }}></p>
 
           {resource.phone_number && <p className="text-gray-700 mb-2">Phone Number: {resource.phone_number}</p>}
           {resource.hours && resource.hours.length > 0 ? (
