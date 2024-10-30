@@ -135,7 +135,7 @@ function EditResource({ id }) {
                 )}
                 <p className="block text-gray-700 line-clamp-1 truncate">Location: {resource.location}</p>
                 {resource.phone_number && <p className="block text-gray-700 mt-2 line-clamp-1 truncate">Phone Number: {resource.phone_number}</p>}
-                <p className="text-gray-600 mt-2 line-clamp-2 text-ellipsis">{resource.description}</p>
+                <p className="text-gray-600 mt-2 line-clamp-2 text-ellipsis" dangerouslySetInnerHTML={{ __html: resource.description }}></p>
                 {resource.email && <p className="block text-gray-700 mt-2 line-clamp-1 truncate">Email: {resource.email}</p>}
                 <button onClick={() => setIsEditing(true)} className="mt-2 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded transition">
                   <FaEdit />
